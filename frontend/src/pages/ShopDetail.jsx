@@ -37,6 +37,9 @@ export default function ShopDetail() {
         <div>
           <h1 className="text-2xl font-bold">{shop.name}</h1>
           <p className="text-gray-700 mt-1">{shop.description}</p>
+          {shop.area && (
+            <p className="text-sm font-semibold text-blue-700 mt-2">📍 Pune: {shop.area.name}</p>
+          )}
           <p className="text-sm text-gray-600 mt-2">{shop.address}</p>
           {shop.map_lat && shop.map_lng && (
             <a className="text-brand text-sm" target="_blank" rel="noreferrer" href={`https://www.google.com/maps?q=${shop.map_lat},${shop.map_lng}`}>Open in Google Maps</a>

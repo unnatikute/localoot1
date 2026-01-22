@@ -44,8 +44,29 @@ export function StatsProvider({ children }) {
     incSaves(1);
   };
 
+  const removeLikedOffer = (offerId) => {
+    setLikedOffers((arr) => arr.filter((o) => String(o.id) !== String(offerId)));
+    setLikes((v) => Math.max(0, v - 1));
+  };
+
+  const removeBookmarkedOffer = (offerId) => {
+    setBookmarkedOffers((arr) => arr.filter((o) => String(o.id) !== String(offerId)));
+    setBookmarks((v) => Math.max(0, v - 1));
+  };
+
+  const removeSavedShop = (shopId) => {
+    setSavedShops((arr) => arr.filter((s) => String(s.id) !== String(shopId)));
+    setSaves((v) => Math.max(0, v - 1));
+  };
+
   return (
-    <StatsContext.Provider value={{ likes, bookmarks, saves, likedOffers, bookmarkedOffers, savedShops, setCounts, incLikes, incBookmarks, incSaves, addLikedOffer, addBookmarkedOffer, addSavedShop }}>
+    <StatsContext.Provider value={{ 
+      likes, bookmarks, saves, 
+      likedOffers, bookmarkedOffers, savedShops, 
+      setCounts, incLikes, incBookmarks, incSaves, 
+      addLikedOffer, addBookmarkedOffer, addSavedShop,
+      removeLikedOffer, removeBookmarkedOffer, removeSavedShop
+    }}>
       {children}
     </StatsContext.Provider>
   );

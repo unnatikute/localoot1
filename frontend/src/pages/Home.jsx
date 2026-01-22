@@ -20,7 +20,7 @@ export default function Home() {
         {[
           { title: 'Food & Dining', desc: 'Hot deals from nearby restaurants', img: 'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=800&auto=format&fit=crop' },
           { title: 'Fashion', desc: 'Trendy styles and seasonal sales', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop' },
-          { title: 'Electronics', desc: 'Latest gadgets and discounts', img: 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=800&auto=format&fit=crop' }
+          { title: 'Electronics', desc: 'Latest gadgets and discounts', img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=800&auto=format&fit=crop'  }
         ].map((c) => (
           <div key={c.title} className="group relative h-56 rounded-xl overflow-hidden">
             <img src={c.img} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform" alt={c.title} />
@@ -37,7 +37,7 @@ export default function Home() {
         <h2 className="text-2xl font-bold mb-4">Top picks for you</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { title: 'Combo meals under ₹199', img: 'https://images.unsplash.com/photo-1526312426976-593c2b999bca?q=80&w=800&auto=format&fit=crop' },
+            { title: 'Combo meals under ₹199', img: 'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=800&auto=format&fit=crop' },
             { title: 'Festive kurtas & more', img: 'https://images.unsplash.com/photo-1520975961572-6c0e4c76b0b7?q=80&w=800&auto=format&fit=crop' },
             { title: 'Smart wearables', img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=800&auto=format&fit=crop' },
             { title: 'Salon & spa offers', img: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop' }
