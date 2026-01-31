@@ -13,6 +13,8 @@ import MyBookmarks from "./pages/MyBookmarks.jsx";
 import SavedShops from "./pages/SavedShops.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
+import About from "./pages/About.jsx";
+
 // ADD THESE TWO IMPORTS
 import ShopDashboard from "./pages/ShopDashboard.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
@@ -91,6 +93,7 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />

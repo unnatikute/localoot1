@@ -16,17 +16,18 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="bg-white rounded-lg p-2 group-hover:scale-110 transition-transform">
-            <ShoppingBag className="w-6 h-6 text-blue-600" />
-          </div>
-          <span className="text-3xl font-bold text-white drop-shadow-sm">
-            Local<span className="text-yellow-300">Loot</span>
-          </span>
-        </Link>
+    <>
+      <nav className="sticky top-0 z-50 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-lg animate-slide-down">
+        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="bg-white rounded-lg p-2 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 shadow-lg group-hover:shadow-xl">
+              <ShoppingBag className="w-6 h-6 text-blue-600 group-hover:text-indigo-600 transition-colors" />
+            </div>
+            <span className="text-3xl font-bold text-white drop-shadow-sm group-hover:drop-shadow-lg transition-all duration-300">
+              Local<span className="text-yellow-300 group-hover:text-yellow-200 transition-colors">Loot</span>
+            </span>
+          </Link>
 
         {/* Mobile Menu Button */}
         <button
@@ -49,6 +50,15 @@ export default function Navbar() {
                 >
                   🏠 Home
                 </Link>
+
+                 <Link
+                  to="/about"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-white font-semibold hover:text-yellow-300 transition py-2"
+                >
+                  ℹ️ About
+                </Link>
+
                 <Link
                   to="/contact"
                   onClick={() => setMobileMenuOpen(false)}
@@ -56,6 +66,7 @@ export default function Navbar() {
                 >
                   📞 Contact
                 </Link>
+              
                 <Link
                   to="/categories"
                   onClick={() => setMobileMenuOpen(false)}
@@ -135,14 +146,22 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8">
-          <Link to="/" className="text-white font-semibold hover:text-yellow-300 transition duration-200">
+          <Link to="/" className="text-white font-semibold hover:text-yellow-300 transition duration-200 relative group">
             Home
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-300 group-hover:w-full transition-all duration-300"></span>
           </Link>
-          <Link to="/contact" className="text-white font-semibold hover:text-yellow-300 transition duration-200">
+            <Link to="/about" className="text-white font-semibold hover:text-yellow-300 transition duration-200 relative group">
+            About
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-300 group-hover:w-full transition-all duration-300"></span>
+          </Link>
+          <Link to="/contact" className="text-white font-semibold hover:text-yellow-300 transition duration-200 relative group">
             Contact
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-300 group-hover:w-full transition-all duration-300"></span>
           </Link>
-          <Link to="/categories" className="text-white font-semibold hover:text-yellow-300 transition duration-200">
+        
+          <Link to="/categories" className="text-white font-semibold hover:text-yellow-300 transition duration-200 relative group">
             Categories
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-300 group-hover:w-full transition-all duration-300"></span>
           </Link>
 
           {user ? (
@@ -240,5 +259,23 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+
+    <style jsx>{`
+      @keyframes slide-down {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-slide-down {
+        animation: slide-down 0.4s ease-out;
+      }
+    `}</style>
+    </>
   );
 }

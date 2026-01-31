@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import TopOffersSlider from '../components/TopOffersSlider';
 import ShopGrid from '../components/ShopGrid';
 import OffersGrid from '../components/OffersGrid';
+import ChatBot from '../components/ChatBot';
 import { MapPin, Bell, Filter, Clock, Star, TrendingUp } from 'lucide-react';
 import { useAuth } from '../store/auth';
 
@@ -458,10 +459,12 @@ function GuestHome() {
               <p className="text-gray-600 italic">"Love the personalized recommendations. Found great deals on fashion and beauty products!"</p>
             </div>
             <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <div className="w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg">A</div>
-              <div className="ml-4">
-                <div className="font-bold text-gray-900">Amit K.</div>
-                <div className="text-yellow-500">★★★★★</div>
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg">A</div>
+                <div className="ml-4">
+                  <div className="font-bold text-gray-900">Amit K.</div>
+                  <div className="text-yellow-500">★★★★★</div>
+                </div>
               </div>
               <p className="text-gray-600 italic">"The flash deals are incredible! Got 50% off on electronics. Highly recommend!"</p>
             </div>
@@ -494,24 +497,16 @@ function GuestHome() {
   );
 }
 
-// export default function Home() {
-//   const { user } = useAuth();
-//   return user ? <LoggedInHome /> : <GuestHome />;
-// }
-
 export default function Home() {
   const { user } = useAuth();
-
-  const DEV_USER = {
-    name: "Tanuja",
-    location: "Delhi"
-  };
-
-  const isDev = false; // change to false before production
-
-  return (user || isDev)
-    ? <LoggedInHome user={user || DEV_USER} />
-    : <GuestHome />;
+  return (
+    <>
+      {user ? <LoggedInHome user={user} /> : <GuestHome />}
+      <ChatBot />
+    </>
+  );
 }
+
+
 
 
