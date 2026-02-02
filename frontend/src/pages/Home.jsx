@@ -3,11 +3,20 @@ import { Link } from 'react-router-dom';
 import TopOffersSlider from '../components/TopOffersSlider';
 import ShopGrid from '../components/ShopGrid';
 import OffersGrid from '../components/OffersGrid';
+import OfferCard from '../components/OfferCard';
 import ChatBot from '../components/ChatBot';
 import { MapPin, Bell, Filter, Clock, Star, TrendingUp } from 'lucide-react';
 import { useAuth } from '../store/auth';
+import { useStats } from '../store/stats';
+import { useMemo } from 'react';
+import { isAdmin, isShopkeeper } from '../utils/roles';
+import { createApi } from '../api/client';
 
 function LoggedInHome({ user }) {
+  const userIsAdmin = isAdmin(user);
+  const userIsShopkeeper = isShopkeeper(user);
+  const stats = useStats();
+  const api = useMemo(() => createApi(user?.token), [user?.token]);
   const [currentLocation, setCurrentLocation] = useState(user?.location || 'Delhi');
   const [activeFilters, setActiveFilters] = useState([]);
 
@@ -52,23 +61,41 @@ function LoggedInHome({ user }) {
               </div>
             </div>
             
-            {/* Quick Actions */}
+            {/* Quick Actions - role-based */}
         <section className="grid md:grid-cols-4 gap-4">
           <Link to="/categories" className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition text-center">
             <div className="text-3xl mb-3">🔍</div>
             <div className="font-bold text-gray-900">Browse Offers</div>
             <div className="text-sm text-gray-600">Find new deals</div>
           </Link>
-          <Link to="/my-bookmarks" className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition text-center">
-            <div className="text-3xl mb-3">💾</div>
-            <div className="font-bold text-gray-900">My Bookmarks</div>
-            <div className="text-sm text-gray-600">Saved deals</div>
-          </Link>
-          <Link to="/saved-shops" className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition text-center">
-            <div className="text-3xl mb-3">🏪</div>
-            <div className="font-bold text-gray-900">Followed Shops</div>
-            <div className="text-sm text-gray-600">Your favorites</div>
-          </Link>
+          {userIsAdmin && (
+            <Link to="/admin" className="bg-white p-6 rounded-xl border border-purple-200 hover:border-purple-500 hover:shadow-lg transition text-center">
+              <div className="text-3xl mb-3">⭐</div>
+              <div className="font-bold text-gray-900">Admin Panel</div>
+              <div className="text-sm text-gray-600">Manage platform</div>
+            </Link>
+          )}
+          {userIsShopkeeper && (
+            <Link to="/shop-dashboard" className="bg-white p-6 rounded-xl border border-green-200 hover:border-green-500 hover:shadow-lg transition text-center">
+              <div className="text-3xl mb-3">🏪</div>
+              <div className="font-bold text-gray-900">Shop Dashboard</div>
+              <div className="text-sm text-gray-600">Manage your offers</div>
+            </Link>
+          )}
+          {!userIsShopkeeper && !userIsAdmin && (
+            <>
+              <Link to="/mybookmarks" className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition text-center">
+                <div className="text-3xl mb-3">💾</div>
+                <div className="font-bold text-gray-900">My Bookmarks</div>
+                <div className="text-sm text-gray-600">Saved deals</div>
+              </Link>
+              <Link to="/savedshops" className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition text-center">
+                <div className="text-3xl mb-3">🏪</div>
+                <div className="font-bold text-gray-900">Followed Shops</div>
+                <div className="text-sm text-gray-600">Your favorites</div>
+              </Link>
+            </>
+          )}
           <Link to="/categories" className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition text-center">
             <div className="text-3xl mb-3">📍</div>
             <div className="font-bold text-gray-900">Near Me</div>
@@ -78,25 +105,21 @@ function LoggedInHome({ user }) {
           </div>
         </section>
 
-        {/* Personal Stats */}
+            {/* Personal Stats - from stats store */}
         <section className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Your Activity</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">25</div>
+              <div className="text-2xl font-bold text-blue-600">{stats?.bookmarks ?? 0}</div>
               <div className="text-sm text-gray-600">Saved Deals</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">12</div>
+              <div className="text-2xl font-bold text-green-600">{stats?.saves ?? 0}</div>
               <div className="text-sm text-gray-600">Followed Shops</div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">₹2,450</div>
-              <div className="text-sm text-gray-600">Money Saved</div>
-            </div>
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">8</div>
-              <div className="text-sm text-gray-600">Deals Used</div>
+              <div className="text-2xl font-bold text-purple-600">{stats?.likes ?? 0}</div>
+              <div className="text-sm text-gray-600">Liked Offers</div>
             </div>
           </div>
         </section>
@@ -223,38 +246,90 @@ function LoggedInHome({ user }) {
           <ShopGrid />
         </section>
 
-        {/* Saved Deals Preview */}
+        {/* Saved Deals Preview - from stats store */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-3xl font-bold text-gray-900">💾 Your Saved Deals</h2>
               <p className="text-gray-600 mt-1">Quick access to your bookmarked offers</p>
             </div>
-            <Link to="/my-bookmarks" className="text-blue-500 hover:text-blue-700 font-semibold">
+            <Link to="/mybookmarks" className="text-blue-500 hover:text-blue-700 font-semibold">
               View All →
             </Link>
           </div>
-          {/* Placeholder for saved deals - you can replace with actual saved offers grid */}
-          <div className="text-center py-8 text-gray-500">
-            No saved deals yet. Start exploring and save your favorites!
-          </div>
+          {stats?.bookmarkedOffers?.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-6">
+              {stats.bookmarkedOffers.slice(0, 6).map((o) => (
+                <OfferCard
+                  key={o.id}
+                  offer={o}
+                  onLike={async () => {
+                    try { await createApi(user?.token).post(`/offers/${o.id}/like`); } catch {}
+                    stats.addLikedOffer(o);
+                  }}
+                  onBookmark={async () => {
+                    try { await createApi(user?.token).delete(`/offers/${o.id}/bookmark`); } catch {}
+                    stats.removeBookmarkedOffer(o.id);
+                  }}
+                  linkState={{ offer: o, shop: o.shop }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500 bg-white rounded-lg shadow-sm">
+              No saved deals yet. Start exploring and save your favorites!
+            </div>
+          )}
         </section>
 
-        {/* Followed Shops */}
+        {/* Followed Shops - from stats store */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-3xl font-bold text-gray-900">🏪 Followed Shops</h2>
               <p className="text-gray-600 mt-1">Shops you're following for the latest updates</p>
             </div>
-            <Link to="/saved-shops" className="text-blue-500 hover:text-blue-700 font-semibold">
+            <Link to="/savedshops" className="text-blue-500 hover:text-blue-700 font-semibold">
               View All →
             </Link>
           </div>
-          {/* Placeholder for followed shops - you can replace with actual followed shops grid */}
-          <div className="text-center py-8 text-gray-500">
-            No followed shops yet. Follow shops to get notified about new offers!
-          </div>
+          {stats?.savedShops?.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-6">
+              {stats.savedShops.slice(0, 6).map((s) => (
+                <div key={s.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
+                  {(s.image_url || s.logo || s.shopImage) && (
+                    <img src={s.image_url || s.logo || s.shopImage} alt={s.name || s.shopName} className="w-full h-48 object-cover" />
+                  )}
+                  <div className="p-5">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{s.name || s.shopName}</h3>
+                    <p className="text-sm text-gray-600 mb-2">{s.description || 'No description.'}</p>
+                    {s.area && (
+                      <p className="text-xs text-gray-500 mb-2">📍 {s.area?.name || s.area}</p>
+                    )}
+                    <div className="flex gap-2">
+                      <Link
+                        to={`/shops/${s.id}`}
+                        state={{ shop: s }}
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-center"
+                      >
+                        View Shop
+                      </Link>
+                      <button
+                        onClick={() => stats.removeSavedShop(s.id)}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+                      >
+                        Unfollow
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500 bg-white rounded-lg shadow-sm">
+              No followed shops yet. Follow shops to get notified about new offers!
+            </div>
+          )}
         </section>
 
         {/* Info Section */}

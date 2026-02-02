@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useApi } from '../api/client';
 
@@ -169,9 +170,13 @@ export default function TopOffersSlider() {
                   <p className="text-3xl font-bold text-green-400">{currentOffer.discount}% OFF</p>
                 </div>
               )}
-              <button className="px-6 py-3 bg-white text-black font-bold rounded-lg hover:bg-gray-100 transition">
+              <Link
+                to={`/offers/${currentOffer.id}`}
+                state={{ offer: currentOffer }}
+                className="inline-block px-6 py-3 bg-white text-black font-bold rounded-lg hover:bg-gray-100 transition"
+              >
                 Shop Now
-              </button>
+              </Link>
             </div>
           </div>
         </div>

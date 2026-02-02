@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, MapPin, Heart, Share2 } from 'lucide-react';
 import { useApi } from '../api/client';
+import { useStats } from '../store/stats';
 
 // Demo data for shops
 const DEMO_SHOPS = [
@@ -105,15 +106,16 @@ const DEMO_SHOPS = [
 
 export default function ShopGrid() {
   const [shops, setShops] = useState(DEMO_SHOPS);
-  const [liked, setLiked] = useState({});
   const api = useApi();
+  const stats = useStats();
 
   useEffect(() => {
     const fetchShops = async () => {
       try {
         const response = await api.get('/shops?limit=8');
-        if (response.data && (response.data.shops || response.data.length > 0)) {
-          setShops(response.data.shops || response.data);
+        const list = Array.isArray(response.data) ? response.data : response.data?.shops;
+        if (list && list.length > 0) {
+          setShops(list);
         }
         // If API returns nothing, keep using demo data
       } catch (error) {
@@ -125,111 +127,132 @@ export default function ShopGrid() {
     fetchShops();
   }, [api]);
 
-  const toggleLike = (shopId) => {
-    setLiked((prev) => ({
-      ...prev,
-      [shopId]: !prev[shopId],
-    }));
+  const toggleFollow = (e, shop) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!stats) return;
+    if (stats.isShopSaved(shop.id)) {
+      stats.removeSavedShop(shop.id);
+    } else {
+      stats.addSavedShop(shop);
+    }
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {shops.map((shop) => (
-        <Link key={shop.id} to={`/shops/${shop.id}`}>
-          <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group h-full flex flex-col">
-            {/* Shop Image */}
-            <div className="relative h-48 bg-gray-100 overflow-hidden">
+        <div
+          key={shop.id}
+          className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group h-full flex flex-col"
+        >
+          {/* Shop Image */}
+          <div className="relative h-48 bg-gray-100 overflow-hidden">
+            <Link to={`/shops/${shop.id}`} state={{ shop }} className="block h-full">
               <img
-                src={shop.logo || 'https://via.placeholder.com/300x200?text=' + encodeURIComponent(shop.name)}
-                alt={shop.name}
+                src={shop.logo || shop.image_url || shop.shopImage || 'https://via.placeholder.com/300x200?text=' + encodeURIComponent(shop.name || shop.shopName)}
+                alt={shop.name || shop.shopName}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
-              
-              {/* Like Button */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  toggleLike(shop.id);
-                }}
-                className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition z-10"
-              >
-                <Heart
-                  className={`w-5 h-5 transition ${
-                    liked[shop.id] ? 'fill-red-500 text-red-500' : 'text-gray-600'
-                  }`}
-                />
-              </button>
+            </Link>
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
 
-              {/* Badge */}
-              {shop.is_featured && (
-                <div className="absolute top-3 left-3 px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded-full">
-                  ⭐ Featured
-                </div>
-              )}
-            </div>
+            {/* Follow Button - outside Link so click works reliably */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFollow(e, shop);
+              }}
+              className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-amber-50 transition z-20"
+              title={stats.isShopSaved(shop.id) ? 'Unfollow shop' : 'Follow shop'}
+            >
+              <Heart
+                className={`w-5 h-5 transition ${
+                  stats.isShopSaved(shop.id) ? 'fill-amber-500 text-amber-500' : 'text-gray-600'
+                }`}
+              />
+            </button>
 
-            {/* Shop Info */}
-            <div className="p-4 flex flex-col flex-1">
-              <h3 className="font-bold text-lg text-gray-900 line-clamp-2 mb-2">{shop.name}</h3>
-              
-              {/* Location */}
-              {shop.area && (
-                <div className="flex items-center gap-1 text-gray-600 text-sm mb-3">
-                  <MapPin className="w-4 h-4" />
-                  <span className="line-clamp-1">{shop.area}</span>
-                </div>
-              )}
+            {/* Badge */}
+            {shop.is_featured && (
+              <div className="absolute top-3 left-3 px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded-full">
+                ⭐ Featured
+              </div>
+            )}
+          </div>
 
-              {/* Rating & Reviews */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-semibold text-sm text-gray-900">
-                    {shop.rating ? shop.rating.toFixed(1) : '4.5'}
-                  </span>
-                </div>
-                <span className="text-gray-500 text-xs">
-                  ({shop.reviews_count || 120} reviews)
+          {/* Shop Info */}
+          <div className="p-4 flex flex-col flex-1">
+            <Link to={`/shops/${shop.id}`} state={{ shop }} className="hover:underline">
+              <h3 className="font-bold text-lg text-gray-900 line-clamp-2 mb-2">
+                {shop.name || shop.shopName}
+              </h3>
+            </Link>
+
+            {/* Location */}
+            {(shop.area || shop.area?.name) && (
+              <div className="flex items-center gap-1 text-gray-600 text-sm mb-3">
+                <MapPin className="w-4 h-4" />
+                <span className="line-clamp-1">
+                  {typeof shop.area === 'string' ? shop.area : shop.area?.name}
                 </span>
               </div>
+            )}
 
-              {/* Description */}
-              {shop.description && (
-                <p className="text-gray-600 text-xs line-clamp-2 mb-3">{shop.description}</p>
+            {/* Rating & Reviews */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-semibold text-sm text-gray-900">
+                  {shop.rating ? shop.rating.toFixed(1) : '4.5'}
+                </span>
+              </div>
+              <span className="text-gray-500 text-xs">
+                ({shop.reviews_count || 120} reviews)
+              </span>
+            </div>
+
+            {/* Description */}
+            {shop.description && (
+              <p className="text-gray-600 text-xs line-clamp-2 mb-3">{shop.description}</p>
+            )}
+
+            {/* Category Tags */}
+            <div className="flex gap-2 flex-wrap mb-4">
+              {shop.category && (
+                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                  {shop.category}
+                </span>
               )}
+              {shop.tags?.slice(0, 1).map((tag) => (
+                <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                  {tag}
+                </span>
+              ))}
+            </div>
 
-              {/* Category Tags */}
-              <div className="flex gap-2 flex-wrap mb-4">
-                {shop.category && (
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                    {shop.category}
-                  </span>
-                )}
-                {shop.tags?.slice(0, 1).map((tag) => (
-                  <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 mt-auto">
-                <button className="flex-1 px-3 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition text-sm">
-                  View Offers
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                  }}
-                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                >
-                  <Share2 className="w-4 h-4 text-gray-600" />
-                </button>
-              </div>
+            {/* Action Buttons */}
+            <div className="flex gap-2 mt-auto">
+              <Link
+                to={`/shops/${shop.id}`}
+                state={{ shop }}
+                className="flex-1 px-3 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition text-sm text-center"
+              >
+                View Offers
+              </Link>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                }}
+                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              >
+                <Share2 className="w-4 h-4 text-gray-600" />
+              </button>
             </div>
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   );

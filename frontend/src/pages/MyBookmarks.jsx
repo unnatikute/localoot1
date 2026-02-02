@@ -40,13 +40,8 @@ export default function MyBookmarks() {
     } catch (e) {
       // Continue even if API fails (works without database)
     }
-    // Remove from local state and stats store
-    setOffers(offers.filter(o => o.id !== offerId));
-    if (stats.removeBookmarkedOffer) {
-      stats.removeBookmarkedOffer(offerId);
-    } else {
-      stats.setCounts({ ...stats, bookmarks: Math.max(0, (stats.bookmarks || 0) - 1) });
-    }
+    setOffers((prev) => prev.filter((o) => String(o.id) !== String(offerId)));
+    stats.removeBookmarkedOffer(offerId);
   };
 
   if (loading) {

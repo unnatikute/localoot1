@@ -40,13 +40,8 @@ export default function SavedShops() {
     } catch (e) {
       // Continue even if API fails (works without database)
     }
-    // Remove from local state and stats store
-    setShops(shops.filter(s => s.id !== shopId));
-    if (stats.removeSavedShop) {
-      stats.removeSavedShop(shopId);
-    } else {
-      stats.setCounts({ ...stats, saves: Math.max(0, (stats.saves || 0) - 1) });
-    }
+    setShops((prev) => prev.filter((s) => String(s.id) !== String(shopId)));
+    stats.removeSavedShop(shopId);
   };
 
   if (loading) {
@@ -79,18 +74,18 @@ export default function SavedShops() {
         <div className="grid md:grid-cols-3 gap-6">
           {shops.map((s) => (
             <div key={s.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
-              {s.image_url && (
-                <img src={s.image_url} alt={s.name} className="w-full h-48 object-cover" />
+              {(s.image_url || s.logo || s.shopImage) && (
+                <img src={s.image_url || s.logo || s.shopImage} alt={s.name || s.shopName} className="w-full h-48 object-cover" />
               )}
               <div className="p-5">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{s.name}</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{s.name || s.shopName}</h3>
                 <p className="text-sm text-gray-600 mb-2">{s.description || 'No description available.'}</p>
-                {s.area && (
-                  <p className="text-xs text-gray-500 mb-2">📍 Pune: {s.area?.name || 'Pune'}</p>
+                {(s.area || s.area?.name) && (
+                  <p className="text-xs text-gray-500 mb-2">📍 {typeof s.area === 'string' ? s.area : s.area?.name || 'Pune'}</p>
                 )}
-                <p className="text-sm text-gray-600 mb-4">{s.address}</p>
-                {s.phone && (
-                  <p className="text-sm text-gray-600 mb-4">📞 {s.phone}</p>
+                {s.address && <p className="text-sm text-gray-600 mb-4">{s.address}</p>}
+                {(s.phone || s.mobileNumber) && (
+                  <p className="text-sm text-gray-600 mb-4">📞 {s.phone || s.mobileNumber}</p>
                 )}
                 <div className="flex gap-2">
                   <Link

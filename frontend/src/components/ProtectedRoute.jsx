@@ -1,23 +1,26 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../store/auth.jsx";
+import { hasRole } from "../utils/roles.js";
 
-const ProtectedRoute = ({ children }) => {
+export default function ProtectedRoute({ children, allowedRoles }) {
   const { user } = useAuth();
-  const location = useLocation();
 
+  // Not logged in
   if (!user) {
-    // If no user is logged in, redirect to login page
-    return (
-      <Navigate
-        to="/login"
-        state={{ from: location, notice: "Please login to explore localoot!" }}
-        replace
-      />
-    );
+    return <Navigate to="/login" replace />;
+  }
+
+  // Role-based access (allowedRoles: e.g. ["USER", "SHOPKEEPER", "ADMIN"])
+  if (allowedRoles?.length) {
+    const normalizedAllowed = allowedRoles.map((r) => String(r).toUpperCase());
+    // Also allow SHOP_OWNER as alias for SHOPKEEPER
+    if (normalizedAllowed.includes("SHOP_OWNER") && !normalizedAllowed.includes("SHOPKEEPER")) {
+      normalizedAllowed.push("SHOPKEEPER");
+    }
+    if (!hasRole(user, normalizedAllowed)) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return children;
-};
-
-// THIS IS THE MISSING PIECE:
-export default ProtectedRoute;
+}

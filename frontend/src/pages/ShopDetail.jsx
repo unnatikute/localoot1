@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../store/auth.jsx';
 import { createApi } from '../api/client.js';
 import { useStats } from '../store/stats.jsx';
@@ -10,47 +10,119 @@ export default function ShopDetail() {
   const { token } = useAuth();
   const api = useMemo(() => createApi(token), [token]);
   const [shop, setShop] = useState(null);
+  const [loading, setLoading] = useState(true);
   const stats = useStats();
+
+  const isSaved = shop?.id && stats?.isShopSaved?.(shop.id);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
+      setLoading(true);
       const fromState = location.state?.shop;
-      if (fromState) { setShop(fromState); return; }
+      if (fromState) {
+        setShop(fromState);
+        setLoading(false);
+        return;
+      }
       try {
         const { data } = await api.get(`/shops/${shopId}`);
         if (mounted) setShop(data);
       } catch {
         // ignore for mock flow
+      } finally {
+        if (mounted) setLoading(false);
       }
     }
     load();
     return () => { mounted = false; };
   }, [api, shopId, location.state]);
 
-  if (!shop) return <p>Loading...</p>;
+  const handleFollowToggle = async () => {
+    if (!shop) return;
+    if (isSaved) {
+      try {
+        await api.delete(`/shops/${shop.id}/save`);
+      } catch {}
+      stats.removeSavedShop(shop.id);
+    } else {
+      try {
+        await api.post(`/shops/${shop.id}/save`);
+      } catch {}
+      stats.addSavedShop(shop);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (!shop) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600">Shop not found</p>
+        <Link to="/categories" className="text-blue-600 hover:underline mt-2 inline-block">
+          Back to Categories
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-lg border p-4">
-      <div className="flex items-start gap-4">
-        {shop.image_url && <img src={shop.image_url} className="w-40 h-40 object-cover rounded" alt={shop.name} />}
-        <div>
-          <h1 className="text-2xl font-bold">{shop.name}</h1>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="flex flex-col md:flex-row gap-6 p-6">
+        {(shop.image_url || shop.logo || shop.shopImage) && (
+          <img
+            src={shop.image_url || shop.logo || shop.shopImage}
+            alt={shop.name || shop.shopName}
+            className="w-full md:w-64 h-64 object-cover rounded-lg"
+          />
+        )}
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-gray-900">{shop.name || shop.shopName}</h1>
           <p className="text-gray-700 mt-1">{shop.description}</p>
           {shop.area && (
-            <p className="text-sm font-semibold text-blue-700 mt-2">📍 Pune: {shop.area.name}</p>
+            <p className="text-sm font-semibold text-blue-700 mt-2">
+              📍 Pune: {shop.area?.name || shop.area}
+            </p>
           )}
           <p className="text-sm text-gray-600 mt-2">{shop.address}</p>
-          {shop.map_lat && shop.map_lng && (
-            <a className="text-brand text-sm" target="_blank" rel="noreferrer" href={`https://www.google.com/maps?q=${shop.map_lat},${shop.map_lng}`}>Open in Google Maps</a>
+          {(shop.phone || shop.mobileNumber) && (
+            <a
+            href={`tel:${shop.phone || shop.mobileNumber}`}
+            className="text-sm text-blue-600 hover:underline block mt-1"
+          >
+            📞 {shop.phone || shop.mobileNumber}
+            </a>
           )}
-          <div className="mt-3">
-            <button onClick={async () => { try { await api.post(`/shops/${shop.id}/save`); } catch {} stats.addSavedShop(shop); }} className="px-3 py-1.5 bg-amber-500 text-white rounded">Save shop</button>
+          {shop.map_lat && shop.map_lng && (
+            <a
+              className="text-sm text-blue-600 hover:underline block mt-2"
+              target="_blank"
+              rel="noreferrer"
+              href={`https://www.google.com/maps?q=${shop.map_lat},${shop.map_lng}`}
+            >
+              Open in Google Maps →
+            </a>
+          )}
+          <div className="mt-4">
+            <button
+              onClick={handleFollowToggle}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                isSaved
+                  ? 'bg-amber-100 text-amber-700 border-2 border-amber-300 hover:bg-amber-200'
+                  : 'bg-amber-500 text-white hover:bg-amber-600'
+              }`}
+            >
+              {isSaved ? '✓ Following' : '+ Follow Shop'}
+            </button>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-

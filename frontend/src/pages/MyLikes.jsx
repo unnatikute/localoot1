@@ -40,13 +40,8 @@ export default function MyLikes() {
     } catch (e) {
       // Continue even if API fails (works without database)
     }
-    // Remove from local state and stats store
-    setOffers(offers.filter(o => o.id !== offerId));
-    if (stats.removeLikedOffer) {
-      stats.removeLikedOffer(offerId);
-    } else {
-      stats.setCounts({ ...stats, likes: Math.max(0, (stats.likes || 0) - 1) });
-    }
+    setOffers((prev) => prev.filter((o) => String(o.id) !== String(offerId)));
+    stats.removeLikedOffer(offerId);
   };
 
   if (loading) {
