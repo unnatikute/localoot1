@@ -1,30 +1,23 @@
 package com.localoot.localoot.repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
+import com.localoot.localoot.model.Shop;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import com.localoot.localoot.model.Shop;
+import java.util.List;
 
 @Repository
 public interface ShopRepository extends JpaRepository<Shop, Long> {
+    
+    // AdminController calls this for filtering
     List<Shop> findByRegistrationStatus(String status);
-    List<Shop> findByShopkeeperId(Long shopkeeperId);
     
-    @Query("SELECT s FROM Shop s WHERE s.registrationDate >= :startDate AND s.registrationDate <= :endDate")
-    List<Shop> findByRegistrationDateRange(@Param("startDate") LocalDateTime startDate, 
-                                           @Param("endDate") LocalDateTime endDate);
+    // AdminController calls this for stats
+    long countByRegistrationStatus(String status);
     
-    @Query("SELECT COUNT(s) FROM Shop s WHERE s.registrationStatus = :status")
-    Long countByRegistrationStatus(@Param("status") String status);
-    
+    // AdminController calls this for charts
     @Query(value = "SELECT DATE_FORMAT(registration_date, '%Y-%m') as month, COUNT(*) as count " +
-                   "FROM shops WHERE registration_status = 'APPROVED' " +
-                   "GROUP BY DATE_FORMAT(registration_date, '%Y-%m') " +
-                   "ORDER BY month DESC", nativeQuery = true)
+                   "FROM shops GROUP BY month ORDER BY month DESC", nativeQuery = true)
     List<Object[]> getShopsRegisteredByMonth();
 }

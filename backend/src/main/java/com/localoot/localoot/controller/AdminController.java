@@ -347,6 +347,9 @@ public class AdminController {
     /**
      * Get dashboard summary
      */
+    /**
+     * Get dashboard summary
+     */
     @GetMapping("/dashboard/summary")
     public ResponseEntity<?> getDashboardSummary() {
         Map<String, Object> summary = new HashMap<>();
@@ -361,6 +364,7 @@ public class AdminController {
         
         // Recent shops
         List<Shop> recentShops = shopRepository.findAll().stream()
+                .filter(s -> s.getRegistrationDate() != null)
                 .sorted((s1, s2) -> s2.getRegistrationDate().compareTo(s1.getRegistrationDate()))
                 .limit(5)
                 .collect(Collectors.toList());
@@ -379,4 +383,5 @@ public class AdminController {
     private int getIntValue(Integer value) {
         return value == null ? 0 : value;
     }
-}
+} // End of AdminController class
+   
