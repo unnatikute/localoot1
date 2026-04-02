@@ -124,7 +124,19 @@ export default function OffersGrid() {
       try {
         const response = await api.get('/offers?limit=12');
         if (response.data && (response.data.offers || response.data.length > 0)) {
-          setOffers(response.data.offers || response.data);
+          const raw = response.data.offers || response.data;
+          const normalized = raw.map((o) => ({
+            ...o,
+            image_url: o.image_url || o.imageUrl,
+            discount: o.discount || (o.originalPrice && o.price
+              ? Math.round(((o.originalPrice - o.price) / o.originalPrice) * 100)
+              : null),
+            price: o.price || null,
+            shop: o.shop || (o.shopName
+              ? { id: o.shopId || null, name: o.shopName, area: o.area }
+              : o.shop),
+          }));
+          setOffers(normalized);
         }
       } catch (error) {
         console.error('Error fetching offers, using demo data:', error);

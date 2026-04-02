@@ -17,7 +17,9 @@ import MyBookmarks from "./pages/MyBookmarks.jsx";
 import SavedShops from "./pages/SavedShops.jsx";
 
 import ShopDashboard from "./pages/ShopDashboard.jsx";
+import ShopkeeperSubscription from "./pages/ShopkeeperSubscription.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
+import AdminSettings from "./pages/AdminSettings.jsx";
 import AdminUserDetails from "./pages/AdminUserDetails.jsx";
 import AdminShopDetails from "./pages/AdminShopDetails.jsx";
 
@@ -32,7 +34,7 @@ export default function App() {
         <div className="min-h-screen flex flex-col bg-gray-50">
           <Navbar />
 
-          <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
+        <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
             <Routes>
               {/* PUBLIC */}
               <Route path="/" element={<Home />} />
@@ -106,12 +108,30 @@ export default function App() {
                 }
               />
 
+              <Route
+                path="/shopkeeper-subscription"
+                element={
+                  <ProtectedRoute allowedRoles={["SHOPKEEPER"]}>
+                    <ShopkeeperSubscription />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* ADMIN */}
               <Route
                 path="/admin"
                 element={
                   <ProtectedRoute allowedRoles={["ADMIN"]}>
                     <AdminPanel />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/settings"
+                element={
+                  <ProtectedRoute allowedRoles={["ADMIN"]}>
+                    <AdminSettings />
                   </ProtectedRoute>
                 }
               />

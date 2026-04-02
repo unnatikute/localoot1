@@ -118,7 +118,7 @@ export default function ShopDetail() {
                   : 'bg-amber-500 text-white hover:bg-amber-600'
               }`}
             >
-              {isSaved ? '✓ Following' : '+ Follow Shop'}
+              {isSaved ? '✓ Saved Shop' : '+ Save Shop'}
             </button>
           </div>
         </div>

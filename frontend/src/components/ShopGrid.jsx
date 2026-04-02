@@ -156,7 +156,7 @@ export default function ShopGrid() {
             </Link>
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
 
-            {/* Follow Button - outside Link so click works reliably */}
+            {/* Save / Follow Button - outside Link so click works reliably */}
             <button
               type="button"
               onClick={(e) => {
@@ -164,14 +164,17 @@ export default function ShopGrid() {
                 e.stopPropagation();
                 toggleFollow(e, shop);
               }}
-              className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-amber-50 transition z-20"
-              title={stats.isShopSaved(shop.id) ? 'Unfollow shop' : 'Follow shop'}
+              className="absolute top-3 right-3 px-3 py-1 bg-white rounded-full shadow-md hover:bg-amber-50 transition z-20 flex items-center gap-1"
+              title={stats.isShopSaved(shop.id) ? 'Unsave shop' : 'Save shop'}
             >
               <Heart
                 className={`w-5 h-5 transition ${
                   stats.isShopSaved(shop.id) ? 'fill-amber-500 text-amber-500' : 'text-gray-600'
                 }`}
               />
+              <span className="text-xs font-medium text-gray-700">
+                {stats.isShopSaved(shop.id) ? 'Saved' : 'Save'}
+              </span>
             </button>
 
             {/* Badge */}

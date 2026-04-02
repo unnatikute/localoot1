@@ -20,10 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.localoot.localoot.dto.UserDetailsDTO;
 import com.localoot.localoot.model.Offer;
+import com.localoot.localoot.model.Payment;
 import com.localoot.localoot.model.Shop;
+import com.localoot.localoot.model.Subscription;
 import com.localoot.localoot.model.User;
 import com.localoot.localoot.repository.OfferRepository;
+import com.localoot.localoot.repository.PaymentRepository;
 import com.localoot.localoot.repository.ShopRepository;
+import com.localoot.localoot.repository.SubscriptionRepository;
 import com.localoot.localoot.repository.UserRepository;
 
 @RestController
@@ -39,6 +43,12 @@ public class AdminController {
 
     @Autowired
     private OfferRepository offerRepository;
+
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     // ============= SHOP ENDPOINTS =============
 
@@ -323,6 +333,38 @@ public class AdminController {
         
         // Timestamps
         analytics.put("generatedAt", LocalDateTime.now());
+
+        // Subscription & revenue analytics
+        List<Subscription> activeSubs = subscriptionRepository.findByStatus("ACTIVE");
+        analytics.put("subscriptions", Map.of(
+                "total", subscriptionRepository.count(),
+                "active", activeSubs.size()
+        ));
+
+        List<Payment> payments = paymentRepository.findAll();
+        double totalRevenue = payments.stream()
+                .filter(p -> "COMPLETED".equalsIgnoreCase(p.getStatus()))
+                .mapToDouble(p -> p.getAmount() == null ? 0.0 : p.getAmount())
+                .sum();
+
+        LocalDateTime now = LocalDateTime.now();
+        double revenue30 = payments.stream()
+                .filter(p -> "COMPLETED".equalsIgnoreCase(p.getStatus()))
+                .filter(p -> p.getPaymentDate() != null && p.getPaymentDate().isAfter(now.minusDays(30)))
+                .mapToDouble(p -> p.getAmount() == null ? 0.0 : p.getAmount())
+                .sum();
+
+        double revenue365 = payments.stream()
+                .filter(p -> "COMPLETED".equalsIgnoreCase(p.getStatus()))
+                .filter(p -> p.getPaymentDate() != null && p.getPaymentDate().isAfter(now.minusDays(365)))
+                .mapToDouble(p -> p.getAmount() == null ? 0.0 : p.getAmount())
+                .sum();
+
+        analytics.put("revenue", Map.of(
+                "total", totalRevenue,
+                "last30Days", revenue30,
+                "last365Days", revenue365
+        ));
         
         return ResponseEntity.ok(analytics);
     }

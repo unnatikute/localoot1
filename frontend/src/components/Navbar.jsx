@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../store/auth.jsx";
-import { ShoppingBag, Menu, X, User, LogOut, Settings, LayoutDashboard, Store, Crown, ChevronDown } from "lucide-react";
+import { ShoppingBag, Menu, X, User, LogOut, LayoutDashboard, Store, Crown, ChevronDown } from "lucide-react";
 import { isAdmin, isShopkeeper, getRoleFromUser } from "../utils/roles.js";
 
 export default function Navbar() {
@@ -367,18 +367,8 @@ export default function Navbar() {
                       {/* Divider */}
                       <hr className="my-2" />
 
-                      {/* Settings & Logout */}
+                      {/* Logout */}
                       <div className="py-2">
-                        <button
-                          onClick={() => {
-                            setShowUserMenu(false);
-                            // TODO: Navigate to settings page when implemented
-                          }}
-                          className="flex items-center gap-3 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition w-full text-left"
-                        >
-                          <Settings className="w-4 h-4" />
-                          Settings
-                        </button>
                         <button
                           onClick={handleLogout}
                           className="flex items-center gap-3 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 transition w-full text-left"

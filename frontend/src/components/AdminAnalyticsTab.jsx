@@ -84,6 +84,35 @@ export default function AnalyticsTab() {
         </div>
       </div>
 
+      {/* Subscriptions & Revenue */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <p className="text-sm text-gray-600">Active Subscriptions</p>
+          <p className="text-3xl font-bold mt-2 text-indigo-700">
+            {analytics?.subscriptions?.active || 0}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            Total: {analytics?.subscriptions?.total || 0}
+          </p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <p className="text-sm text-gray-600">Revenue (Last 30 Days)</p>
+          <p className="text-3xl font-bold mt-2 text-green-700">
+            ₹{Math.round(analytics?.revenue?.last30Days || 0)}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Payments marked COMPLETED</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <p className="text-sm text-gray-600">Total Revenue</p>
+          <p className="text-3xl font-bold mt-2 text-blue-700">
+            ₹{Math.round(analytics?.revenue?.total || 0)}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            Last 365 days: ₹{Math.round(analytics?.revenue?.last365Days || 0)}
+          </p>
+        </div>
+      </div>
+
       {/* Detailed Statistics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* User Statistics */}

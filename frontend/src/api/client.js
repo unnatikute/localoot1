@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useMemo } from 'react';
 import { useAuth } from '../store/auth.jsx';
 
 export function createApi(token) {
@@ -13,7 +14,7 @@ export function createApi(token) {
 // Hook sugar for components
 export function useApi() {
   const { token } = useAuth();
-  return createApi(token);
+  return useMemo(() => createApi(token), [token]);
 }
 
 

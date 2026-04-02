@@ -92,7 +92,20 @@ export default function TopOffersSlider() {
       try {
         const response = await api.get('/offers?sort=trending&limit=5');
         if (response.data && (response.data.offers || response.data.length > 0)) {
-          setOffers(response.data.offers || response.data);
+          const raw = response.data.offers || response.data;
+          const normalized = raw.map((o) => ({
+            ...o,
+            // Normalize backend field names to what the slider expects
+            image_url: o.image_url || o.imageUrl,
+            discount: o.discount || (o.originalPrice && o.price
+              ? Math.round(((o.originalPrice - o.price) / o.originalPrice) * 100)
+              : null),
+            price: o.price || null,
+            shop: o.shop || (o.shopName
+              ? { id: o.shopId || null, name: o.shopName, logo: o.shopImage || null, area: o.area }
+              : o.shop),
+          }));
+          setOffers(normalized);
         }
         // If API returns nothing, keep using demo data
       } catch (error) {
@@ -145,7 +158,7 @@ export default function TopOffersSlider() {
           <div className="p-8 text-white max-w-2xl">
             <div className="inline-block mb-3">
               <span className="px-4 py-2 bg-red-500 text-white font-bold text-sm rounded-full">
-                🔥 TOP OFFER OF THE DAY
+                🔥 Top Offer of the Day
               </span>
             </div>
             <h2 className="text-5xl font-bold mb-3 leading-tight">{currentOffer.title}</h2>
@@ -158,7 +171,7 @@ export default function TopOffersSlider() {
                 </div>
                 <div>
                   <p className="font-semibold text-sm">{currentOffer.shop.name}</p>
-                  <p className="text-xs text-gray-200">{currentOffer.shop.area || 'Local Shop'}</p>
+                  <p className="text-xs text-gray-200">{currentOffer.shop.area || "Local Shop"}</p>
                 </div>
               </div>
             )}
@@ -167,7 +180,7 @@ export default function TopOffersSlider() {
               {currentOffer.discount && (
                 <div>
                   <p className="text-sm text-gray-200">Discount</p>
-                  <p className="text-3xl font-bold text-green-400">{currentOffer.discount}% OFF</p>
+                  <p className="text-3xl font-bold text-green-400">{currentOffer.discount}% Off</p>
                 </div>
               )}
               <Link

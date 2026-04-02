@@ -46,7 +46,7 @@ function LoggedInHome({ user }) {
           <div className="max-w-4xl mx-auto">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div className="flex-1">
-                <h1 className="text-4xl font-bold mb-2">Welcome back, {user?.name || 'User'}! 👋</h1>
+                <h1 className="text-4xl font-bold mb-2">Home: {user?.name || 'User'} 👋</h1>
                 <div className="flex items-center gap-2 text-blue-100 mb-4">
                   <MapPin className="w-5 h-5" />
                   <span className="text-lg">{currentLocation}</span>

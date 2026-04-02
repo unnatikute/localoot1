@@ -1,32 +1,14 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
 export default function Signup() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const roleParam = params.get("role");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState(() => {
-    if (roleParam) {
-      const r = roleParam.toLowerCase();
-      if (r.includes("shop")) return "SHOPKEEPER";
-      return "USER";
-    }
-    return "USER";
-  });
-
-  // Update role when URL param changes
-  useEffect(() => {
-    if (roleParam) {
-      const r = roleParam.toLowerCase();
-      setRole(r.includes("shop") ? "SHOPKEEPER" : "USER");
-    }
-  }, [roleParam]);
+  const [role, setRole] = useState("USER");
   const [area, setArea] = useState("");
   const [shopName, setShopName] = useState("");
   const [error, setError] = useState("");
