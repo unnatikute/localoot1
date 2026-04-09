@@ -31,7 +31,7 @@ export default function About() {
       color: "from-yellow-500 to-orange-600",
       bgColor: "bg-yellow-50",
       borderColor: "border-yellow-200",
-      img: "https://i.pravatar.cc/150?img=12",
+      img: '/assets/team/unnati.jpg',
     },
     {
       name: "Nikita Nijave",
@@ -248,7 +248,7 @@ export default function About() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in {
           from {
             opacity: 0;

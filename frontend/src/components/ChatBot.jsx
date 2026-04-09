@@ -321,7 +321,7 @@ export default function ChatBot() {
         {isOpen && <X className="w-6 h-6" />}
       </button>
 
-      <style jsx>{`
+      <style >{`
         @keyframes slide-up {
           from {
             opacity: 0;

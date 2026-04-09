@@ -159,7 +159,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style >{`
         @keyframes fade-up {
           from {
             opacity: 0;

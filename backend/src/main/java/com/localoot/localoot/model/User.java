@@ -27,4 +27,6 @@ public class User {
     private Integer bookmarksCount = 0;
     private Integer shopsVisited = 0;
     private Integer engagementScore = 0;
+
+    private String fcmToken;
 }

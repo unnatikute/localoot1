@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Package, DollarSign, Calendar, TrendingUp, FileText, History } from "lucide-react";
+import {
+  Package,
+  DollarSign,
+  Calendar,
+  TrendingUp,
+  FileText,
+  History,
+} from "lucide-react";
+
+
 
 const ShopkeeperSubscription = () => {
+  
   const user = JSON.parse(localStorage.getItem("user"));
   const [activeTab, setActiveTab] = useState("overview");
+const navigate = useNavigate();
+const [hasShop, setHasShop] = useState(true);
   const [subscriptionInfo, setSubscriptionInfo] = useState({
     subscription: null,
     package: null,
@@ -16,31 +29,58 @@ const ShopkeeperSubscription = () => {
   const [payments, setPayments] = useState([]);
   const [offerHistory, setOfferHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+const [selectedPackage, setSelectedPackage] = useState(null);
+const [selectedDuration, setSelectedDuration] = useState("");
+const hasActiveSubscription =
+  subscriptionInfo.subscription &&
+  subscriptionInfo.subscription.status === "ACTIVE";
 
   useEffect(() => {
     if (user?.id) {
+      checkShop();
       fetchData();
     }
   }, [user?.id]);
 
+ 
+
   const fetchData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        fetchSubscription(),
-        fetchPackages(),
-        fetchPayments(),
-        fetchOfferHistory(),
-      ]);
-    } finally {
-      setLoading(false);
+  setLoading(true);
+
+  try {
+    await fetchSubscription();
+    await fetchPackages();
+    await fetchPayments();
+    await fetchOfferHistory();
+  } catch (err) {
+    console.error("Error in fetchData:", err);
+  } finally {
+    setLoading(false); // ✅ ALWAYS runs
+  }
+};
+
+const checkShop = async () => {
+  try {
+    const res = await axios.get(
+      `http://localhost:8080/api/shops/my-shop?shopkeeperId=${user.id}`
+    );
+
+    if (res.data) {
+      setHasShop(true);
+    } else {
+      setHasShop(false);
     }
-  };
+  } catch (err) {
+    console.error("Shop check error:", err);
+    setHasShop(false);
+  }
+};
 
   const fetchSubscription = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:8080/api/subscriptions/my-subscription?shopkeeperId=${user.id}`
+        `http://localhost:8080/api/subscriptions/my-subscription?shopkeeperId=${user.id}`,
       );
       setSubscriptionInfo({
         subscription: res.data.subscription || null,
@@ -56,7 +96,9 @@ const ShopkeeperSubscription = () => {
 
   const fetchPackages = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/subscriptions/packages?active=true");
+      const res = await axios.get(
+        "http://localhost:8080/api/subscriptions/packages?active=true",
+      );
       setPackages(res.data);
     } catch (err) {
       console.error("Error fetching packages:", err);
@@ -66,7 +108,7 @@ const ShopkeeperSubscription = () => {
   const fetchPayments = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:8080/api/subscriptions/payments?shopkeeperId=${user.id}`
+        `http://localhost:8080/api/subscriptions/payments?shopkeeperId=${user.id}`,
       );
       setPayments(res.data);
     } catch (err) {
@@ -77,7 +119,7 @@ const ShopkeeperSubscription = () => {
   const fetchOfferHistory = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:8080/api/offers/history/${user.id}`
+        `http://localhost:8080/api/offers/history/${user.id}`,
       );
       setOfferHistory(res.data);
     } catch (err) {
@@ -95,7 +137,9 @@ const ShopkeeperSubscription = () => {
       alert("Subscription activated successfully!");
       fetchData();
     } catch (err) {
-      alert("Failed to subscribe: " + (err.response?.data?.error || err.message));
+      alert(
+        "Failed to subscribe: " + (err.response?.data?.error || err.message),
+      );
     }
   };
 
@@ -115,30 +159,29 @@ const ShopkeeperSubscription = () => {
       alert("Stripe session created, but URL was not returned. Check console.");
       console.log("Stripe response:", stripeResponse);
     } catch (err) {
-      alert("Stripe payment setup failed: " + (err.response?.data?.error || err.message));
+      alert(
+        "Stripe payment setup failed: " +
+          (err.response?.data?.error || err.message),
+      );
       console.error(err.response?.data || err);
     }
   };
 
-  const payWithRazorpay = async (packageId, durationType) => {
-    try {
-      const res = await axios.post("/api/payments/razorpay/order", {
-        packageId,
-        durationType,
-      });
-      // For full Razorpay Checkout, we’d load Razorpay Checkout JS and open the payment modal.
-      // For now we expose the order payload to confirm backend integration works.
-      alert("Razorpay order created. Open console to see order details.");
-      console.log("Razorpay payload:", res.data);
-    } catch (err) {
-      alert("Razorpay payment setup failed: " + (err.response?.data?.error || err.message));
-      console.error(err.response?.data || err);
-    }
-  };
+const payWithRazorpay = (pkg, durationType) => {
+   if (hasActiveSubscription) {
+    alert("You already have an active subscription!");
+    return;
+  }
+  setSelectedPackage(pkg);
+  setSelectedDuration(durationType);
+  setShowPaymentModal(true);
+};
 
   const renewSubscription = async (durationType) => {
     try {
-      const currentPkgId = subscriptionInfo.package?.id || subscriptionInfo.subscription?.subscriptionPackage?.id;
+      const currentPkgId =
+        subscriptionInfo.package?.id ||
+        subscriptionInfo.subscription?.subscriptionPackage?.id;
       await axios.post("http://localhost:8080/api/subscriptions/renew", {
         shopkeeperId: user.id,
         packageId: currentPkgId || null,
@@ -152,12 +195,34 @@ const ShopkeeperSubscription = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center py-12">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center py-12">Loading...</div>
+    );
   }
+  if (!hasShop) {
+  return (
+    <div className="flex flex-col items-center justify-center h-screen">
+      <h2 className="text-2xl font-bold mb-4">
+        🚫 No Shop Registered
+      </h2>
+      <p className="mb-4 text-gray-600">
+        Please register your shop before accessing subscriptions
+      </p>
+
+      <button
+        onClick={() => navigate("/register-shop")}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
+      >
+        Register Shop
+      </button>
+    </div>
+  );
+}
 
   const offersUsed = subscriptionInfo.offersUsed || 0;
   const offersLimit = subscriptionInfo.offersLimit || 0;
-  const usagePercentage = offersLimit > 0 ? (offersUsed / offersLimit) * 100 : 0;
+  const usagePercentage =
+    offersLimit > 0 ? (offersUsed / offersLimit) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
@@ -224,7 +289,9 @@ const ShopkeeperSubscription = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <p className="text-sm text-gray-600">Package</p>
-                      <p className="text-xl font-bold">{subscriptionInfo.package?.name || "N/A"}</p>
+                      <p className="text-xl font-bold">
+                        {subscriptionInfo.package?.name || "N/A"}
+                      </p>
                     </div>
                     <div className="bg-green-50 p-4 rounded-lg">
                       <p className="text-sm text-gray-600">Status</p>
@@ -236,7 +303,9 @@ const ShopkeeperSubscription = () => {
                       <p className="text-sm text-gray-600">Valid Until</p>
                       <p className="text-xl font-bold">
                         {subscriptionInfo.subscription.endDate
-                          ? new Date(subscriptionInfo.subscription.endDate).toLocaleDateString()
+                          ? new Date(
+                              subscriptionInfo.subscription.endDate,
+                            ).toLocaleDateString()
                           : "N/A"}
                       </p>
                     </div>
@@ -245,7 +314,9 @@ const ShopkeeperSubscription = () => {
                   {/* Usage Progress */}
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="font-semibold">Offers Used This Period</span>
+                      <span className="font-semibold">
+                        Offers Used This Period
+                      </span>
                       <span className="font-bold">
                         {offersUsed} / {offersLimit}
                       </span>
@@ -256,8 +327,8 @@ const ShopkeeperSubscription = () => {
                           usagePercentage >= 90
                             ? "bg-red-500"
                             : usagePercentage >= 70
-                            ? "bg-yellow-500"
-                            : "bg-green-500"
+                              ? "bg-yellow-500"
+                              : "bg-green-500"
                         }`}
                         style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                       />
@@ -270,11 +341,13 @@ const ShopkeeperSubscription = () => {
                   {subscriptionInfo.daysRemaining !== null && (
                     <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
                       <p className="text-sm">
-                        <strong>Days Remaining:</strong> {subscriptionInfo.daysRemaining} days
+                        <strong>Days Remaining:</strong>{" "}
+                        {subscriptionInfo.daysRemaining} days
                       </p>
                       {subscriptionInfo.daysRemaining <= 7 && (
                         <p className="text-sm text-red-600 mt-1">
-                          ⚠️ Your subscription expires soon! Renew to continue displaying offers.
+                          ⚠️ Your subscription expires soon! Renew to continue
+                          displaying offers.
                         </p>
                       )}
                     </div>
@@ -333,7 +406,9 @@ const ShopkeeperSubscription = () => {
                   <TrendingUp className="w-8 h-8 text-purple-600" />
                   <div>
                     <p className="text-sm text-gray-600">Usage Rate</p>
-                    <p className="text-2xl font-bold">{Math.round(usagePercentage)}%</p>
+                    <p className="text-2xl font-bold">
+                      {Math.round(usagePercentage)}%
+                    </p>
                   </div>
                 </div>
               </div>
@@ -344,7 +419,15 @@ const ShopkeeperSubscription = () => {
         {/* Packages Tab */}
         {activeTab === "packages" && (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold mb-6">Available Subscription Packages</h2>
+            <h2 className="text-2xl font-bold mb-6">
+              Available Subscription Packages
+            </h2>
+           
+{hasActiveSubscription && (
+  <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded">
+    You already have an active subscription. Please renew instead.
+  </div>
+)}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {packages.map((pkg) => (
                 <div
@@ -355,57 +438,47 @@ const ShopkeeperSubscription = () => {
                   <p className="text-gray-600 mb-4">{pkg.description}</p>
                   <div className="space-y-2 mb-4">
                     <p>
-                      <strong>Monthly:</strong> {pkg.monthlyOfferLimit} offers - ₹{pkg.monthlyPrice}
+                      <strong>Monthly:</strong> {pkg.monthlyOfferLimit} offers -
+                      ₹{pkg.monthlyPrice}
                     </p>
                     <p>
-                      <strong>Yearly:</strong> {pkg.yearlyOfferLimit} offers - ₹{pkg.yearlyPrice}
+                      <strong>Yearly:</strong> {pkg.yearlyOfferLimit} offers - ₹
+                      {pkg.yearlyPrice}
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    {(pkg.durationType === "MONTHLY" || pkg.durationType === "BOTH") && (
-                      <button
-                        onClick={() => subscribeToPackage(pkg.id, "MONTHLY")}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold"
-                      >
-                        Subscribe Monthly
-                      </button>
-                    )}
-                    {(pkg.durationType === "YEARLY" || pkg.durationType === "BOTH") && (
-                      <button
-                        onClick={() => subscribeToPackage(pkg.id, "YEARLY")}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold"
-                      >
-                        Subscribe Yearly
-                      </button>
-                    )}
-                  </div>
+               <div className="flex gap-2">
+  {(pkg.durationType === "MONTHLY" ||
+    pkg.durationType === "BOTH") && (
+    <button
+  disabled={hasActiveSubscription}
+  onClick={() => payWithRazorpay(pkg, "MONTHLY")}
+  className={`flex-1 px-4 py-2 rounded font-semibold ${
+    hasActiveSubscription
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-blue-600 hover:bg-blue-700 text-white"
+  }`}
+>
+  {hasActiveSubscription ? "Already Subscribed" : "Subscribe Monthly"}
+</button>
+  )}
 
-                  <div className="mt-3 grid grid-cols-1 gap-2">
-                    <button
-                      onClick={() => payWithStripe(pkg.id, "MONTHLY")}
-                      className="w-full bg-black text-white px-4 py-2 rounded font-semibold"
-                    >
-                      Pay with Stripe (Monthly)
-                    </button>
-                    <button
-                      onClick={() => payWithStripe(pkg.id, "YEARLY")}
-                      className="w-full bg-black text-white px-4 py-2 rounded font-semibold"
-                    >
-                      Pay with Stripe (Yearly)
-                    </button>
-                    <button
-                      onClick={() => payWithRazorpay(pkg.id, "MONTHLY")}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-semibold"
-                    >
-                      Pay with Razorpay (Monthly)
-                    </button>
-                    <button
-                      onClick={() => payWithRazorpay(pkg.id, "YEARLY")}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-semibold"
-                    >
-                      Pay with Razorpay (Yearly)
-                    </button>
-                  </div>
+  {(pkg.durationType === "YEARLY" ||
+    pkg.durationType === "BOTH") && (
+   <button
+  disabled={hasActiveSubscription}
+  onClick={() => payWithRazorpay(pkg, "YEARLY")}
+  className={`flex-1 px-4 py-2 rounded font-semibold ${
+    hasActiveSubscription
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-green-600 hover:bg-green-700 text-white"
+  }`}
+>
+  {hasActiveSubscription ? "Already Subscribed" : "Subscribe Yearly"}
+</button>
+  )}
+</div>
+
+                 
                 </div>
               ))}
             </div>
@@ -415,9 +488,13 @@ const ShopkeeperSubscription = () => {
         {/* Payments Tab */}
         {activeTab === "payments" && (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold mb-6">Payment History & Invoices</h2>
+            <h2 className="text-2xl font-bold mb-6">
+              Payment History & Invoices
+            </h2>
             {payments.length === 0 ? (
-              <p className="text-gray-600 text-center py-8">No payment history found</p>
+              <p className="text-gray-600 text-center py-8">
+                No payment history found
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -434,12 +511,19 @@ const ShopkeeperSubscription = () => {
                   </thead>
                   <tbody>
                     {payments.map((payment) => (
-                      <tr key={payment.id} className="border-b hover:bg-gray-50">
-                        <td className="p-3 font-mono text-sm">{payment.invoiceNumber}</td>
+                      <tr
+                        key={payment.id}
+                        className="border-b hover:bg-gray-50"
+                      >
+                        <td className="p-3 font-mono text-sm">
+                          {payment.invoiceNumber}
+                        </td>
                         <td className="p-3">
                           {new Date(payment.paymentDate).toLocaleDateString()}
                         </td>
-                        <td className="p-3">{payment.subscriptionPackage?.name || "N/A"}</td>
+                        <td className="p-3">
+                          {payment.subscriptionPackage?.name || "N/A"}
+                        </td>
                         <td className="p-3 font-bold">₹{payment.amount}</td>
                         <td className="p-3 text-sm">
                           {payment.periodStart && payment.periodEnd
@@ -452,8 +536,8 @@ const ShopkeeperSubscription = () => {
                               payment.status === "COMPLETED"
                                 ? "bg-green-100 text-green-800"
                                 : payment.status === "PENDING"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
                             }`}
                           >
                             {payment.status}
@@ -483,7 +567,9 @@ const ShopkeeperSubscription = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold mb-6">Offer Approval History</h2>
             {offerHistory.length === 0 ? (
-              <p className="text-gray-600 text-center py-8">No offer history found</p>
+              <p className="text-gray-600 text-center py-8">
+                No offer history found
+              </p>
             ) : (
               <div className="space-y-4">
                 {offerHistory.map((history) => (
@@ -493,7 +579,9 @@ const ShopkeeperSubscription = () => {
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-bold text-lg">{history.offer?.title || "N/A"}</h3>
+                        <h3 className="font-bold text-lg">
+                          {history.offer?.title || "N/A"}
+                        </h3>
                         <p className="text-sm text-gray-600">
                           {new Date(history.actionDate).toLocaleString()}
                         </p>
@@ -503,8 +591,8 @@ const ShopkeeperSubscription = () => {
                           history.action === "APPROVED"
                             ? "bg-green-100 text-green-800"
                             : history.action === "REJECTED"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-blue-100 text-blue-800"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-blue-100 text-blue-800"
                         }`}
                       >
                         {history.action}
@@ -527,6 +615,76 @@ const ShopkeeperSubscription = () => {
           </div>
         )}
       </div>
+      {showPaymentModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="bg-white w-[400px] rounded-xl shadow-lg p-6">
+
+      <h2 className="text-xl font-bold mb-4 text-center">
+        Razorpay Payment (Demo)
+      </h2>
+
+      <p className="mb-2"><strong>Package:</strong> {selectedPackage?.name}</p>
+      <p className="mb-2"><strong>Type:</strong> {selectedDuration}</p>
+      <p className="mb-4">
+        <strong>Amount:</strong> ₹
+        {selectedDuration === "MONTHLY"
+          ? selectedPackage?.monthlyPrice
+          : selectedPackage?.yearlyPrice}
+      </p>
+
+      <input
+        type="text"
+        placeholder="Card Number"
+        className="w-full border p-2 mb-2 rounded"
+      />
+      <input
+        type="text"
+        placeholder="MM/YY"
+        className="w-full border p-2 mb-2 rounded"
+      />
+      <input
+        type="text"
+        placeholder="CVV"
+        className="w-full border p-2 mb-4 rounded"
+      />
+
+      <button
+        className="w-full bg-blue-600 text-white py-2 rounded mb-2"
+        onClick={async () => {
+          if (hasActiveSubscription) {
+    alert("You already have an active subscription!");
+    return;
+  }
+          try {
+            await axios.post(
+              "http://localhost:8080/api/subscriptions/subscribe",
+              {
+                shopkeeperId: user.id,
+                packageId: selectedPackage.id,
+                durationType: selectedDuration,
+              }
+            );
+
+            alert("Payment Successful ✅");
+            setShowPaymentModal(false);
+            fetchData();
+          } catch (err) {
+            alert("Error creating subscription");
+          }
+        }}
+      >
+        Pay Now
+      </button>
+
+      <button
+        className="w-full text-red-500"
+        onClick={() => setShowPaymentModal(false)}
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 };

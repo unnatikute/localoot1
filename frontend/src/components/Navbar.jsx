@@ -460,7 +460,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <style jsx>{`
+      <style >{`
         @keyframes slide-down {
           from {
             opacity: 0;

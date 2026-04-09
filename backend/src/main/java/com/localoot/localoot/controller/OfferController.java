@@ -105,45 +105,52 @@ public class OfferController {
      * 1. CREATE OFFER (Shopkeeper)
      * When a shopkeeper submits, it starts as 'PENDING'
      */
-    @PostMapping("/create")
-    public Offer createOffer(@RequestBody Offer offer) {
-        LocalDateTime now = LocalDateTime.now();
+  @PostMapping("/create")
+public Offer createOffer(@RequestBody Offer offer) {
 
-        if (offer.getValidFrom() == null) {
-            offer.setValidFrom(now);
-        }
-
-        if (offer.getValidUntil() == null && offer.getDurationValue() != null && offer.getDurationValue() > 0) {
-            if ("HOURS".equalsIgnoreCase(offer.getDurationType())) {
-                offer.setValidUntil(offer.getValidFrom().plusHours(offer.getDurationValue()));
-            } else {
-                offer.setValidUntil(offer.getValidFrom().plusDays(offer.getDurationValue()));
-            }
-        }
-
-        if (offer.getValidUntil() != null && offer.getValidFrom() != null && offer.getValidUntil().isBefore(offer.getValidFrom())) {
-            throw new IllegalArgumentException("Offer valid-until must be after valid-from");
-        }
-
-        offer.setStatus("PENDING");
-        offer.setApprovedAt(null);
-        offer.setRejectedAt(null);
-        offer.setAdminStatusComment(null);
-        Offer saved = offerRepository.save(offer);
-
-        // Create history record for submission
-        OfferHistory history = new OfferHistory();
-        history.setOffer(saved);
-        history.setShopkeeper(saved.getShopkeeper());
-        history.setAction("SUBMITTED");
-        history.setPreviousStatus(null);
-        history.setNewStatus("PENDING");
-        history.setActionDate(LocalDateTime.now());
-        historyRepository.save(history);
-
-        return saved;
+    // ✅ SAFE CHECK (prevents 500 error)
+    if (offer.getShopkeeper() == null || offer.getShopkeeper().getId() == null) {
+        throw new RuntimeException("Shopkeeper ID is missing from request");
     }
 
+    // ✅ Fetch real user from DB
+    User user = userRepository.findById(offer.getShopkeeper().getId())
+            .orElseThrow(() -> new RuntimeException("User not found with ID: " + offer.getShopkeeper().getId()));
+
+    offer.setShopkeeper(user); // attach managed entity
+
+    LocalDateTime now = LocalDateTime.now();
+
+    if (offer.getValidFrom() == null) {
+        offer.setValidFrom(now);
+    }
+
+    if (offer.getValidUntil() == null && offer.getDurationValue() != null && offer.getDurationValue() > 0) {
+        if ("HOURS".equalsIgnoreCase(offer.getDurationType())) {
+            offer.setValidUntil(offer.getValidFrom().plusHours(offer.getDurationValue()));
+        } else {
+            offer.setValidUntil(offer.getValidFrom().plusDays(offer.getDurationValue()));
+        }
+    }
+
+    offer.setStatus("PENDING");
+    offer.setApprovedAt(null);
+    offer.setRejectedAt(null);
+    offer.setAdminStatusComment(null);
+
+    Offer saved = offerRepository.save(offer);
+
+    // history
+    OfferHistory history = new OfferHistory();
+    history.setOffer(saved);
+    history.setShopkeeper(saved.getShopkeeper());
+    history.setAction("SUBMITTED");
+    history.setNewStatus("PENDING");
+    history.setActionDate(LocalDateTime.now());
+    historyRepository.save(history);
+
+    return saved;
+}
     /**
      * 2. GET ALL PENDING (Admin)
      * Admin uses this to see what needs approval

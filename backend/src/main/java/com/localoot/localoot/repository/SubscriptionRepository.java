@@ -22,4 +22,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     
     @Query("SELECT s FROM Subscription s WHERE s.shopkeeper.id = :shopkeeperId AND s.status = 'ACTIVE' AND s.endDate >= :now")
     Optional<Subscription> findActiveSubscriptionForShopkeeper(@Param("shopkeeperId") Long shopkeeperId, @Param("now") LocalDateTime now);
+
+    Optional<Subscription> findTopByShopkeeperIdOrderByEndDateDesc(Long shopkeeperId);
 }

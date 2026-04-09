@@ -29,7 +29,7 @@ public class SubscriptionExpiryJob {
     }
 
     // Runs daily at 9:00 AM server time
-    @Scheduled(cron = "0 0 9 * * *")
+    @Scheduled(fixedRate = 60000) 
     public void notifyExpiringSubscriptions() {
         AdminSettings settings = settingsRepository.findFirstByOrderByIdAsc();
         int days = settings != null && settings.getDaysBeforeExpiryToNotify() != null

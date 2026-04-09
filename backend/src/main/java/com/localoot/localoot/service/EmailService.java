@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import com.localoot.localoot.service.EmailService;
 
 @Service
 public class EmailService {
@@ -20,7 +21,8 @@ public class EmailService {
     }
 
     public void send(String to, String subject, String body) {
-        if (to == null || to.isBlank()) return;
+        if (to == null || to.isBlank())
+            return;
 
         if (!emailEnabled) {
             System.out.println("[EMAIL_DISABLED] To=" + to + " Subject=" + subject + "\n" + body);
@@ -36,4 +38,3 @@ public class EmailService {
         mailSender.send(message);
     }
 }
-

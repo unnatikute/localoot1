@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Star, MapPin, Heart, Share2 } from 'lucide-react';
 import { useApi } from '../api/client';
 import { useStats } from '../store/stats';
+import axios from 'axios';
 
 // Demo data for shops
 const DEMO_SHOPS = [
@@ -109,23 +110,23 @@ export default function ShopGrid() {
   const api = useApi();
   const stats = useStats();
 
-  useEffect(() => {
-    const fetchShops = async () => {
-      try {
-        const response = await api.get('/shops?limit=8');
-        const list = Array.isArray(response.data) ? response.data : response.data?.shops;
-        if (list && list.length > 0) {
-          setShops(list);
-        }
-        // If API returns nothing, keep using demo data
-      } catch (error) {
-        console.error('Error fetching shops, using demo data:', error);
-        // Keep demo data on error - don't disrupt UI
-      }
-    };
+useEffect(() => {
+  const fetchShops = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/api/shops?limit=8");
 
-    fetchShops();
-  }, [api]);
+      const list = Array.isArray(res.data) ? res.data : res.data?.shops;
+
+      if (list && list.length > 0) {
+        setShops(list);
+      }
+    } catch (error) {
+      console.error('Error fetching shops, using demo data:', error);
+    }
+  };
+
+  fetchShops();
+}, []);
 
   const toggleFollow = (e, shop) => {
     e.preventDefault();

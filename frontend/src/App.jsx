@@ -22,10 +22,12 @@ import AdminPanel from "./pages/AdminPanel.jsx";
 import AdminSettings from "./pages/AdminSettings.jsx";
 import AdminUserDetails from "./pages/AdminUserDetails.jsx";
 import AdminShopDetails from "./pages/AdminShopDetails.jsx";
-
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { AuthProvider } from "./store/auth.jsx";
 import { StatsProvider } from "./store/stats.jsx";
+import ProtectedRoute from "./pages/ProtectedRoute.jsx";
+import RegisterShops from "./pages/RegisterShops.jsx";
+
+
 
 export default function App() {
   return (
@@ -42,6 +44,8 @@ export default function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/register-shop" element={<RegisterShops/>} />
+              
 
               {/* USER */}
               <Route
@@ -80,6 +84,8 @@ export default function App() {
                 }
               />
 
+              
+              
               <Route
                 path="/mybookmarks"
                 element={
