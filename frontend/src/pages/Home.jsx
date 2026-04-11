@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import TopOffersSlider from '../components/TopOffersSlider';
 import ShopGrid from '../components/ShopGrid';
 import OffersGrid from '../components/OffersGrid';
 import OfferCard from '../components/OfferCard';
 import ChatBot from '../components/ChatBot';
-import { MapPin, Bell, Filter, Clock, Star, TrendingUp } from 'lucide-react';
+import { MapPin, Bell, Filter, Clock, Star, TrendingUp, Sparkles, Heart, Zap } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { useStats } from '../store/stats';
 import { useMemo } from 'react';
@@ -39,90 +40,300 @@ function LoggedInHome({ user }) {
   };
 
   return (
-    <div className="w-full">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="w-full"
+    >
       <div className="space-y-12">
         {/* Enhanced Welcome Header */}
-        <section className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
-          <div className="max-w-4xl mx-auto">
+        <motion.section
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl p-8 text-white overflow-hidden"
+        >
+          {/* Animated background elements */}
+          <div className="absolute inset-0">
+            <motion.div
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.1, 0.3, 0.1]
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute top-10 right-10 w-32 h-32 bg-white rounded-full"
+            />
+            <motion.div
+              animate={{
+                scale: [1.2, 1, 1.2],
+                opacity: [0.1, 0.2, 0.1]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1
+              }}
+              className="absolute bottom-10 left-10 w-24 h-24 bg-white rounded-full"
+            />
+          </div>
+
+          <div className="max-w-4xl mx-auto relative z-10">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div className="flex-1">
-                <h1 className="text-4xl font-bold mb-2">Home: {user?.name || 'User'} 👋</h1>
-                <div className="flex items-center gap-2 text-blue-100 mb-4">
-                  <MapPin className="w-5 h-5" />
-                  <span className="text-lg">{currentLocation}</span>
-                  <button 
-                    onClick={handleLocationChange}
-                    className="text-sm underline hover:text-white"
+                <motion.div
+                  initial={{ x: -30, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex items-center gap-3 mb-4"
+                >
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    Change Location
-                  </button>
-                </div>
-                <p className="text-xl text-blue-100">Discover amazing deals and exclusive offers near you</p>
+                    <Sparkles className="h-8 w-8 text-yellow-300" />
+                  </motion.div>
+                  <h1 className="text-4xl lg:text-5xl font-bold">Welcome back, {user?.name || 'User'}! 👋</h1>
+                </motion.div>
+
+                <motion.div
+                  initial={{ x: -30, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex items-center gap-2 text-blue-100 mb-6"
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <MapPin className="h-5 w-5" />
+                  </motion.div>
+                  <span className="text-lg">Exploring amazing offers in</span>
+                  <motion.button
+                    onClick={handleLocationChange}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="font-semibold underline hover:text-white transition-colors"
+                  >
+                    {currentLocation}
+                  </motion.button>
+                </motion.div>
+
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex flex-wrap gap-3"
+                >
+                  <motion.button
+                    onClick={() => toggleFilter('trending')}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      activeFilters.includes('trending')
+                        ? 'bg-white text-blue-600 shadow-lg'
+                        : 'bg-blue-500/30 text-white hover:bg-blue-500/50'
+                    }`}
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    Trending
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => toggleFilter('nearby')}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      activeFilters.includes('nearby')
+                        ? 'bg-white text-blue-600 shadow-lg'
+                        : 'bg-blue-500/30 text-white hover:bg-blue-500/50'
+                    }`}
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Nearby
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => toggleFilter('favorites')}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      activeFilters.includes('favorites')
+                        ? 'bg-white text-blue-600 shadow-lg'
+                        : 'bg-blue-500/30 text-white hover:bg-blue-500/50'
+                    }`}
+                  >
+                    <Heart className="h-4 w-4" />
+                    Favorites
+                  </motion.button>
+                </motion.div>
               </div>
+
+              <motion.div
+                initial={{ x: 30, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="lg:flex-shrink-0"
+              >
+                <motion.div
+                  animate={{
+                    y: [0, -10, 0],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-center"
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    className="text-4xl mb-2"
+                  >
+                    🎉
+                  </motion.div>
+                  <p className="text-sm font-medium mb-1">Today's Special</p>
+                  <p className="text-xs text-blue-100">Amazing deals await!</p>
+                </motion.div>
+              </motion.div>
             </div>
-            
-            {/* Quick Actions - role-based */}
-        <section className="grid md:grid-cols-4 gap-4">
-          <Link to="/categories" className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition text-center">
-            <div className="text-3xl mb-3">🔍</div>
-            <div className="font-bold text-gray-900">Browse Offers</div>
-            <div className="text-sm text-gray-600">Find new deals</div>
-          </Link>
+          </div>
+        </motion.section>
+
+        {/* Quick Actions - role-based */}
+        <motion.section
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1, duration: 0.6 }}
+          className="grid md:grid-cols-4 gap-6"
+        >
+          <motion.div whileHover={{ scale: 1.05, y: -5 }} whileTap={{ scale: 0.95 }}>
+            <Link to="/categories" className="block bg-white p-6 rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-xl transition-all duration-300 text-center group">
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300"
+              >
+                🔍
+              </motion.div>
+              <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Browse Offers</div>
+              <div className="text-sm text-gray-600">Find new deals</div>
+            </Link>
+          </motion.div>
+
           {userIsAdmin && (
-            <Link to="/admin" className="bg-white p-6 rounded-xl border border-purple-200 hover:border-purple-500 hover:shadow-lg transition text-center">
-              <div className="text-3xl mb-3">⭐</div>
-              <div className="font-bold text-gray-900">Admin Panel</div>
-              <div className="text-sm text-gray-600">Manage platform</div>
-            </Link>
+            <motion.div whileHover={{ scale: 1.05, y: -5 }} whileTap={{ scale: 0.95 }}>
+              <Link to="/admin" className="block bg-white p-6 rounded-2xl border border-purple-200 hover:border-purple-500 hover:shadow-xl transition-all duration-300 text-center group">
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300"
+                >
+                  ⭐
+                </motion.div>
+                <div className="font-bold text-gray-900 group-hover:text-purple-600 transition-colors">Admin Panel</div>
+                <div className="text-sm text-gray-600">Manage platform</div>
+              </Link>
+            </motion.div>
           )}
+
           {userIsShopkeeper && (
-            <Link to="/shop-dashboard" className="bg-white p-6 rounded-xl border border-green-200 hover:border-green-500 hover:shadow-lg transition text-center">
-              <div className="text-3xl mb-3">🏪</div>
-              <div className="font-bold text-gray-900">Shop Dashboard</div>
-              <div className="text-sm text-gray-600">Manage your offers</div>
-            </Link>
+            <motion.div whileHover={{ scale: 1.05, y: -5 }} whileTap={{ scale: 0.95 }}>
+              <Link to="/shop-dashboard" className="block bg-white p-6 rounded-2xl border border-green-200 hover:border-green-500 hover:shadow-xl transition-all duration-300 text-center group">
+                <motion.div
+                  animate={{ y: [0, -3, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300"
+                >
+                  🏪
+                </motion.div>
+                <div className="font-bold text-gray-900 group-hover:text-green-600 transition-colors">Shop Dashboard</div>
+                <div className="text-sm text-gray-600">Manage your offers</div>
+              </Link>
+            </motion.div>
           )}
+
           {!userIsShopkeeper && !userIsAdmin && (
             <>
-              <Link to="/mybookmarks" className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition text-center">
-                <div className="text-3xl mb-3">💾</div>
-                <div className="font-bold text-gray-900">My Bookmarks</div>
-                <div className="text-sm text-gray-600">Saved deals</div>
-              </Link>
-              <Link to="/savedshops" className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition text-center">
-                <div className="text-3xl mb-3">🏪</div>
-                <div className="font-bold text-gray-900">Followed Shops</div>
-                <div className="text-sm text-gray-600">Your favorites</div>
-              </Link>
+              <motion.div whileHover={{ scale: 1.05, y: -5 }} whileTap={{ scale: 0.95 }}>
+                <Link to="/mybookmarks" className="block bg-white p-6 rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-xl transition-all duration-300 text-center group">
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300"
+                  >
+                    💾
+                  </motion.div>
+                  <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">My Bookmarks</div>
+                  <div className="text-sm text-gray-600">Saved deals</div>
+                </Link>
+              </motion.div>
+
+              <motion.div whileHover={{ scale: 1.05, y: -5 }} whileTap={{ scale: 0.95 }}>
+                <Link to="/savedshops" className="block bg-white p-6 rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-xl transition-all duration-300 text-center group">
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                    className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300"
+                  >
+                    ❤️
+                  </motion.div>
+                  <div className="font-bold text-gray-900 group-hover:text-red-600 transition-colors">Saved Shops</div>
+                  <div className="text-sm text-gray-600">Favorite stores</div>
+                </Link>
+              </motion.div>
             </>
           )}
-          <Link to="/categories" className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition text-center">
-            <div className="text-3xl mb-3">📍</div>
-            <div className="font-bold text-gray-900">Near Me</div>
-            <div className="text-sm text-gray-600">Local deals</div>
-          </Link>
-        </section>
-          </div>
-        </section>
+        </motion.section>
 
-            {/* Personal Stats - from stats store */}
-        <section className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Your Activity</h3>
+        {/* Personal Stats - from stats store */}
+        <motion.section
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.2, duration: 0.6 }}
+          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200"
+        >
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="text-2xl"
+            >
+              📊
+            </motion.div>
+            Your Activity
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{stats?.bookmarks ?? 0}</div>
-              <div className="text-sm text-gray-600">Saved Deals</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{stats?.saves ?? 0}</div>
-              <div className="text-sm text-gray-600">Followed Shops</div>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">{stats?.likes ?? 0}</div>
-              <div className="text-sm text-gray-600">Liked Offers</div>
-            </div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-md transition-all duration-300"
+            >
+              <div className="text-3xl font-bold text-blue-600 mb-1">{stats?.bookmarks ?? 0}</div>
+              <div className="text-sm text-gray-600 font-medium">Saved Deals</div>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-md transition-all duration-300"
+            >
+              <div className="text-3xl font-bold text-green-600 mb-1">{stats?.saves ?? 0}</div>
+              <div className="text-sm text-gray-600 font-medium">Followed Shops</div>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-md transition-all duration-300"
+            >
+              <div className="text-3xl font-bold text-purple-600 mb-1">{stats?.likes ?? 0}</div>
+              <div className="text-sm text-gray-600 font-medium">Liked Offers</div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
       
         {/* Top Offers Slider */}
         <section>
@@ -365,7 +576,7 @@ function LoggedInHome({ user }) {
           </button>
         </section>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

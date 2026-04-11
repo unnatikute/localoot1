@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useStats } from '../store/stats.jsx';
+import { Heart, Bookmark as BookmarkIcon, Share2, Eye, Clock, MapPin, Store } from 'lucide-react';
 
 export default function OfferCard({ offer, onLike, onBookmark, linkState, isLiked, isBookmarked }) {
   const stats = useStats();
@@ -64,37 +66,89 @@ export default function OfferCard({ offer, onLike, onBookmark, linkState, isLike
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300 flex flex-col">
+    <motion.div
+      whileHover={{
+        y: -8,
+        transition: { duration: 0.3, ease: "easeOut" }
+      }}
+      whileTap={{ scale: 0.98 }}
+      className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-500 flex flex-col group relative"
+    >
+      {/* Animated gradient border on hover */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-sm"></div>
+
       {offer.image_url && (
-        <div className="relative">
+        <motion.div
+          className="relative overflow-hidden"
+          whileHover={{ scale: 1.05 }}
+          transition={{ duration: 0.3 }}
+        >
           <img
             src={offer.image_url}
             alt={offer.title}
-            className="w-full h-48 object-cover"
+            className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
           {offer.is_trending && (
-            <span className="absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold bg-red-500 text-white shadow-lg">
-              🔥 Trending
-            </span>
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg flex items-center gap-1"
+            >
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                🔥
+              </motion.div>
+              Trending
+            </motion.span>
           )}
-        </div>
+        </motion.div>
       )}
-      <div className="p-5 flex-1 flex flex-col">
+
+      <div className="p-6 flex-1 flex flex-col">
         <div className="flex-1">
-          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{offer.title}</h3>
-          <p className="text-gray-600 text-sm line-clamp-3 mb-3">
+          <motion.h3
+            className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300"
+            whileHover={{ scale: 1.02 }}
+          >
+            {offer.title}
+          </motion.h3>
+
+          <motion.p
+            className="text-gray-600 text-sm line-clamp-3 mb-4 leading-relaxed"
+            whileHover={{ scale: 1.01 }}
+          >
             {offer.description || 'No description available.'}
-          </p>
+          </motion.p>
+
           {offer.shop && (
-            <div className="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-100">
-              <p className="text-sm font-semibold text-blue-700 mb-1">
-                📍 Pune: {offer.shop.area?.name || offer.shop.area || 'Pune'}
-              </p>
-              <p className="text-xs text-gray-600">🏪 {offer.shop.name}</p>
-            </div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100 hover:shadow-md transition-all duration-300"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <MapPin className="h-4 w-4 text-blue-600" />
+                <p className="text-sm font-semibold text-blue-700">
+                  Pune: {offer.shop.area?.name || offer.shop.area || 'Pune'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Store className="h-4 w-4 text-purple-600" />
+                <p className="text-xs text-gray-600">{offer.shop.name}</p>
+              </div>
+            </motion.div>
           )}
+
           {(offer.validFrom || offer.validUntil) && (
-            <div className="mb-2 text-xs text-gray-500">
+            <motion.div
+              className="mb-3 text-xs text-gray-500 flex items-center gap-1"
+              whileHover={{ scale: 1.01 }}
+            >
+              <Clock className="h-3 w-3" />
               {offer.validFrom && offer.validUntil && (
                 <span>{new Date(offer.validFrom).toLocaleDateString()} - {new Date(offer.validUntil).toLocaleDateString()}</span>
               )}
@@ -104,70 +158,124 @@ export default function OfferCard({ offer, onLike, onBookmark, linkState, isLike
               {offer.validFrom && !offer.validUntil && (
                 <span>Valid from {new Date(offer.validFrom).toLocaleDateString()}</span>
               )}
-            </div>
+            </motion.div>
           )}
+
           {timeLeft && (
-            <div className="mb-3">
-              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${timeLeft === 'Expired' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                {timeLeft === 'Expired' ? 'Expired' : `Ends in ${timeLeft}`}
+            <motion.div
+              className="mb-4"
+              whileHover={{ scale: 1.05 }}
+            >
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-md ${
+                timeLeft === 'Expired'
+                  ? 'bg-gradient-to-r from-red-100 to-red-200 text-red-700 border border-red-300'
+                  : 'bg-gradient-to-r from-green-100 to-green-200 text-green-700 border border-green-300'
+              }`}>
+                {timeLeft === 'Expired' ? '⏰ Expired' : `⏳ Ends in ${timeLeft}`}
               </span>
-            </div>
+            </motion.div>
           )}
+
           {(offer.discount || offer.price) && (
-            <div className="mb-3 flex items-center gap-3">
+            <motion.div
+              className="mb-4 flex items-center gap-3"
+              whileHover={{ scale: 1.02 }}
+            >
               {offer.discount && (
-                <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-bold">
+                <motion.span
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+                >
                   {offer.discount}% OFF
-                </span>
+                </motion.span>
               )}
               {offer.price && (
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-blue-600">₹{offer.price}</span>
+                  <motion.span
+                    className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    ₹{offer.price}
+                  </motion.span>
                   {offer.originalPrice && offer.originalPrice > offer.price && (
-                    <span className="text-sm text-gray-400 line-through">₹{offer.originalPrice}</span>
+                    <motion.span
+                      className="text-sm text-gray-400 line-through"
+                      whileHover={{ x: -2 }}
+                    >
+                      ₹{offer.originalPrice}
+                    </motion.span>
                   )}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-gray-100">
-          <button
+
+        <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-100">
+          <motion.button
             onClick={handleLike}
-            className={`flex-1 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`flex-1 px-4 py-3 text-sm rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
               liked
-                ? 'bg-red-100 text-red-600 border border-red-300'
-                : 'bg-red-50 text-red-600 hover:bg-red-100'
+                ? 'bg-gradient-to-r from-red-100 to-red-200 text-red-700 border-2 border-red-300 shadow-md'
+                : 'bg-gradient-to-r from-red-50 to-red-100 text-red-600 hover:bg-red-200 hover:shadow-md'
             }`}
           >
-            {liked ? `❤️ Liked` : `🤍 Like`}
-          </button>
-          <button
+            <motion.div
+              animate={liked ? { scale: [1, 1.2, 1] } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              <Heart className={`h-4 w-4 ${liked ? 'fill-current' : ''}`} />
+            </motion.div>
+            {liked ? 'Liked' : 'Like'}
+          </motion.button>
+
+          <motion.button
             onClick={handleBookmark}
-            className={`flex-1 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`flex-1 px-4 py-3 text-sm rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
               bookmarked
-                ? 'bg-yellow-100 text-yellow-700 border border-yellow-300'
-                : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'
+                ? 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-700 border-2 border-yellow-300 shadow-md'
+                : 'bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-600 hover:bg-yellow-200 hover:shadow-md'
             }`}
           >
-            {bookmarked ? `🔖 Saved` : `📑 Save`}
-          </button>
-          <button
+            <motion.div
+              animate={bookmarked ? { rotate: [0, 10, -10, 0] } : {}}
+              transition={{ duration: 0.5 }}
+            >
+              <BookmarkIcon className={`h-4 w-4 ${bookmarked ? 'fill-current' : ''}`} />
+            </motion.div>
+            {bookmarked ? 'Saved' : 'Save'}
+          </motion.button>
+
+          <motion.button
             onClick={handleShare}
-            className="px-3 py-2 text-sm rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium transition-colors"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            whileTap={{ scale: 0.9 }}
+            className="px-4 py-3 text-sm rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 hover:bg-blue-200 font-medium transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg"
             title="Share"
           >
-            📤
-          </button>
-          <Link
-            to={`/offers/${offer.id}`}
-            state={linkState}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+            <Share2 className="h-4 w-4" />
+          </motion.button>
+
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex-1"
           >
-            View Details
-          </Link>
+            <Link
+              to={`/offers/${offer.id}`}
+              state={linkState}
+              className="block px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-300 text-center shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+            >
+              <Eye className="h-4 w-4" />
+              View Details
+            </Link>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
