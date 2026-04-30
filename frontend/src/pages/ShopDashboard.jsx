@@ -4,9 +4,9 @@ import axios from "axios";
 
 const ShopDashboard = () => {
   const [offers, setOffers] = useState([]);
+  const [shop, setShop] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // Get logged-in user details (we'll need the ID for the shopkeeper)
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [formData, setFormData] = useState({
@@ -14,31 +14,37 @@ const ShopDashboard = () => {
     description: "",
     category: "",
     area: "",
-    shopName: "",
-    address: "",
     googleMapUrl: "",
-    mobileNumber: "",
-    imageUrl: "",
-    // Pricing fields
+    imageFile: null,
     price: "",
     originalPrice: "",
     discount: "",
-    // New fields for validity & duration
     validFrom: "",
     validUntil: "",
     durationType: "DAYS",
     durationValue: "",
-    // Optional extra image/attachment URLs as comma-separated list for now
     attachmentUrls: "",
-    shopkeeper: { id: user?.id }, // Linking the offer to the current user
+    shopkeeper: { id: user?.id },
   });
 
-  // Fetch this shopkeeper's offers on load
   useEffect(() => {
     if (user?.id) {
       axios
         .get(`http://localhost:8080/api/offers/shopkeeper/${user.id}`)
-        .then((res) => setOffers(res.data))
+        .then((res) => {
+          const data = Array.isArray(res.data)
+            ? res.data.map((item) => item.offer || item)
+            : [];
+
+          setOffers(data);
+        })
+        .catch((err) => {
+          console.error("Error fetching offers:", err);
+        });
+
+      axios
+        .get(`http://localhost:8080/api/shops/by-user/${user.id}`)
+        .then((res) => setShop(res.data[0] || null))
         .catch((err) => console.log(err));
     }
   }, [user?.id]);
@@ -48,89 +54,110 @@ const ShopDashboard = () => {
     const from = offer.validFrom ? new Date(offer.validFrom) : null;
     const until = offer.validUntil ? new Date(offer.validUntil) : null;
 
-    if (offer.status !== 'APPROVED') {
-      return null;
-    }
+    if (offer.status !== "APPROVED") return null;
+
     if (from && now < from) {
-      return `${t("startsFrom")} ${from.toLocaleString()}`;
+      return `Starts from ${from.toLocaleString()}`;
     }
+
     if (until) {
       if (now > until) {
-        return t("expired");
+        return "Expired";
       }
       const diffMs = until - now;
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
-      return `${t("activeFor")} ${days}d ${hours}h ${t("more")}`;
+      return `Active for ${days}d ${hours}h more`;
     }
-    return t("active");
-  };
 
+    return "Active";
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const now = new Date();
-      const fromDate = formData.validFrom ? new Date(formData.validFrom) : now;
-
-      let untilDate = formData.validUntil ? new Date(formData.validUntil) : null;
-
-      if (!untilDate && formData.durationValue) {
-        const durationValue = parseInt(formData.durationValue, 10);
-        if (durationValue > 0) {
-          untilDate = new Date(fromDate);
-          if (formData.durationType === "HOURS") {
-            untilDate.setHours(untilDate.getHours() + durationValue);
-          } else {
-            untilDate.setDate(untilDate.getDate() + durationValue);
-          }
-        }
-      }
-
-      if (untilDate && fromDate > untilDate) {
-        alert(t("endDateAfterStart"));
+      if (!formData.imageFile) {
+        alert("Please select an image");
         return;
       }
 
-      const submitData = {
-        ...formData,
-        price: formData.price ? parseFloat(formData.price) : null,
-        originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
-        discount: formData.discount ? parseInt(formData.discount, 10) : null,
-        durationValue: formData.durationValue ? parseInt(formData.durationValue, 10) : null,
-        validFrom: fromDate ? fromDate.toISOString() : null,
-        validUntil: untilDate ? untilDate.toISOString() : null,
-      };
+      const formDataToSend = new FormData();
 
-      await axios.post("http://localhost:8080/api/offers/create", submitData);
+      formDataToSend.append("image", formData.imageFile);
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("area", formData.area);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("googleMapUrl", formData.googleMapUrl);
+      formDataToSend.append("shopkeeperId", user.id);
+
+      await axios.post(
+        "http://localhost:8080/api/offers/create",
+        formDataToSend,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+
       alert("Offer submitted successfully!");
       setShowForm(false);
-      window.location.reload(); // Refresh to show the new pending offer
+      window.location.reload();
     } catch (err) {
       console.error(err);
-      alert("Error submitting offer. Please try again.");
+      alert("Error submitting offer");
     }
   };
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Shop Dashboard</h1>
-        <div className="flex gap-3">
-          <Link
-            to="/shopkeeper-subscription"
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold"
+      {/* ✅ TITLE */}
+      <h1 className="text-3xl font-bold mb-4">Shop Dashboard</h1>
+
+      {/* ✅ SHOP STATUS */}
+      {shop && (
+        <div className="mb-6 p-4 rounded-lg border bg-white shadow-sm flex justify-between items-center">
+          <div>
+            <h2 className="font-bold text-lg">{shop.shopName}</h2>
+            <p className="text-sm text-gray-600">{shop.category}</p>
+          </div>
+
+          <span
+            className={`px-4 py-1 rounded text-sm font-semibold ${
+              shop.registrationStatus === "APPROVED"
+                ? "bg-green-100 text-green-700"
+                : shop.registrationStatus === "PENDING"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : "bg-red-100 text-red-700"
+            }`}
           >
-            Subscription History
-          </Link>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            {showForm ? "Close Form" : "+ Add New Offer"}
-          </button>
+            {shop.registrationStatus}
+          </span>
         </div>
+      )}
+
+      {/* ✅ BUTTONS */}
+      <div className="flex justify-end gap-3 mb-8">
+        <Link
+          to="/shopkeeper-subscription"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold"
+        >
+          Subscription History
+        </Link>
+
+        <button
+          onClick={() => setShowForm(!showForm)}
+          disabled={shop?.registrationStatus !== "APPROVED"}
+          className={`px-4 py-2 rounded ${
+            shop?.registrationStatus !== "APPROVED"
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 text-white"
+          }`}
+        >
+          {showForm ? "Close Form" : "+ Add New Offer"}
+        </button>
       </div>
 
+      {/* ✅ FORM */}
       {showForm && (
         <form
           onSubmit={handleSubmit}
@@ -145,6 +172,7 @@ const ShopDashboard = () => {
             }
             required
           />
+
           <input
             type="text"
             placeholder="Category"
@@ -154,37 +182,12 @@ const ShopDashboard = () => {
             }
             required
           />
+
           <input
             type="text"
             placeholder="Area"
             className="p-2 border rounded"
             onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Mobile Number"
-            className="p-2 border rounded"
-            onChange={(e) =>
-              setFormData({ ...formData, mobileNumber: e.target.value })
-            }
-            required
-          />
-          <input
-            type="text"
-            placeholder="Shop Name"
-            className="p-2 border rounded md:col-span-2"
-            onChange={(e) =>
-              setFormData({ ...formData, shopName: e.target.value })
-            }
-            required
-          />
-          <textarea
-            placeholder="Full Address"
-            className="p-2 border rounded md:col-span-2"
-            onChange={(e) =>
-              setFormData({ ...formData, address: e.target.value })
-            }
             required
           />
           <input
@@ -196,120 +199,14 @@ const ShopDashboard = () => {
             }
           />
           <input
-            type="text"
-            placeholder="Main Image URL"
+            type="file"
+            accept="image/*"
             className="p-2 border rounded md:col-span-2"
             onChange={(e) =>
-              setFormData({ ...formData, imageUrl: e.target.value })
+              setFormData({ ...formData, imageFile: e.target.files[0] })
             }
           />
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-semibold mb-1">
-                Offer Price (₹)
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="e.g. 499"
-                className="p-2 border rounded w-full"
-                onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-1">
-                Original Price (₹)
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="e.g. 999"
-                className="p-2 border rounded w-full"
-                onChange={(e) =>
-                  setFormData({ ...formData, originalPrice: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-1">
-                Discount (%)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                placeholder="e.g. 50"
-                className="p-2 border rounded w-full"
-                onChange={(e) =>
-                  setFormData({ ...formData, discount: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-semibold mb-1">
-                Offer Start Date
-              </label>
-              <input
-                type="datetime-local"
-                className="p-2 border rounded w-full"
-                onChange={(e) =>
-                  setFormData({ ...formData, validFrom: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-1">
-                Offer End Date
-              </label>
-              <input
-                type="datetime-local"
-                className="p-2 border rounded w-full"
-                onChange={(e) =>
-                  setFormData({ ...formData, validUntil: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-1">
-                Duration
-              </label>
-              <div className="flex gap-2">
-                <select
-                  className="p-2 border rounded w-1/2"
-                  value={formData.durationType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, durationType: e.target.value })
-                  }
-                >
-                  <option value="HOURS">Hours</option>
-                  <option value="DAYS">Days</option>
-                </select>
-                <input
-                  type="number"
-                  min="1"
-                  className="p-2 border rounded w-1/2"
-                  placeholder="Value"
-                  onChange={(e) =>
-                    setFormData({ ...formData, durationValue: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-          </div>
-          <textarea
-            placeholder="Additional Images (comma separated)"
-            className="p-2 border rounded md:col-span-2 text-sm"
-            rows={2}
-            onChange={(e) =>
-              setFormData({ ...formData, attachmentUrls: e.target.value })
-            }
-          />
+
           <button
             type="submit"
             className="bg-green-600 text-white p-2 rounded md:col-span-2"
@@ -319,45 +216,56 @@ const ShopDashboard = () => {
         </form>
       )}
 
-      <h2 className="text-xl font-semibold mb-4">My Offers Status</h2>
-      <div className="grid grid-cols-1 gap-4">
-        {offers.map((offer) => (
-          <div
-            key={offer.id}
-            className="border p-4 rounded flex justify-between items-center bg-white shadow-sm"
-          >
-            <div>
-              <h3 className="font-bold">{offer.title}</h3>
-              <p className="text-sm text-gray-600">
-                {offer.shopName} - {offer.area}
-              </p>
-              {offer.validFrom && offer.validUntil && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {new Date(offer.validFrom).toLocaleString()} &rarr;{" "}
-                  {new Date(offer.validUntil).toLocaleString()}
-                </p>
-              )}
-              {getValidityLabel(offer) && (
-                <p className="text-xs text-blue-600 mt-1">{getValidityLabel(offer)}</p>
-              )}
-              {offer.status === "REJECTED" && offer.adminStatusComment && (
-                <p className="text-xs text-red-600 mt-1">
-                  Rejected: {offer.adminStatusComment}
-                </p>
-              )}
-            </div>
-            <span
-              className={`px-3 py-1 rounded text-sm ${
-                offer.status === "APPROVED"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-yellow-100 text-yellow-700"
-              }`}
-            >
-              {offer.status}
-            </span>
-          </div>
-        ))}
+      {/* ✅ OFFERS */}
+    <h2 className="text-xl font-semibold mb-4">My Offers Status</h2>
+
+<div className="grid grid-cols-1 gap-4">
+  {offers.map((offer) => (
+    <div
+      key={offer.id}
+      className="border p-4 rounded flex justify-between items-center bg-white shadow-sm"
+    >
+      <div>
+        <h3 className="font-bold">{offer.title}</h3>
+        <p className="text-sm text-gray-600">
+          {offer.shopName} - {offer.area}
+        </p>
+
+        {offer.status === "PENDING" && (
+          <p className="text-xs text-gray-500 mt-1">
+            Waiting for admin approval
+          </p>
+        )}
+
+        {offer.status === "APPROVED" && (
+          <p className="text-xs text-green-600 mt-1">
+            Live and visible to users
+          </p>
+        )}
+
+        {offer.status === "REJECTED" && (
+          <p className="text-xs text-red-500 mt-1">
+            Offer was rejected
+          </p>
+        )}
       </div>
+
+      <span
+        className={`px-3 py-1 rounded text-sm font-semibold ${
+          offer.status === "APPROVED"
+            ? "bg-green-100 text-green-700"
+            : offer.status === "PENDING"
+            ? "bg-yellow-100 text-yellow-700"
+            : "bg-red-100 text-red-700"
+        }`}
+      >
+        {offer.status}
+      </span>
+    </div>
+  ))}
+</div>
+
+    
     </div>
   );
 };

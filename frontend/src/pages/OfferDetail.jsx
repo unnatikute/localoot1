@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../store/auth.jsx';
-import { createApi } from '../api/client.js';
-import { useStats } from '../store/stats.jsx';
+import { useEffect, useMemo, useState } from "react";
+import { useParams, Link, useLocation } from "react-router-dom";
+import { useAuth } from "../store/auth.jsx";
+import { createApi } from "../api/client.js";
+import { useStats } from "../store/stats.jsx";
 
 export default function OfferDetail() {
   const { offerId } = useParams();
@@ -18,62 +18,56 @@ export default function OfferDetail() {
 
   useEffect(() => {
     let mounted = true;
+
     async function load() {
       setLoading(true);
-      const fromState = location.state?.offer;
-      if (fromState) {
-        setOffer(fromState);
-        setLoading(false);
-        return;
-      }
       try {
         const { data } = await api.get(`/offers/${offerId}`);
         if (mounted) setOffer(data);
       } catch (e) {
-        console.error('Error loading offer:', e);
+        console.error("Error loading offer:", e);
       } finally {
         if (mounted) setLoading(false);
       }
     }
+
     load();
-    return () => { mounted = false; };
-  }, [api, offerId, location.state]);
+    return () => {
+      mounted = false;
+    };
+  }, [api, offerId]);
 
   const handleLike = async () => {
     if (!offer) return;
-    if (liked) {
-      try {
+
+    try {
+      if (liked) {
         await api.delete(`/offers/${offer.id}/like`);
-      } catch (e) {
-        console.error('Error unliking offer:', e);
-      }
-      stats.removeLikedOffer(offer.id);
-    } else {
-      try {
+        stats.removeLikedOffer(offer.id);
+      } else {
         await api.post(`/offers/${offer.id}/like`);
         stats.addLikedOffer(offer);
-      } catch (e) {
-        console.error('Error liking offer:', e);
       }
+    } catch (e) {
+      console.error("LIKE ERROR:", e.response?.data || e.message);
+      alert("Like failed");
     }
   };
 
   const handleBookmark = async () => {
     if (!offer) return;
-    if (bookmarked) {
-      try {
+
+    try {
+      if (bookmarked) {
         await api.delete(`/offers/${offer.id}/bookmark`);
-      } catch (e) {
-        console.error('Error unbookmarking offer:', e);
-      }
-      stats.removeBookmarkedOffer(offer.id);
-    } else {
-      try {
+        stats.removeBookmarkedOffer(offer.id);
+      } else {
         await api.post(`/offers/${offer.id}/bookmark`);
         stats.addBookmarkedOffer(offer);
-      } catch (e) {
-        console.error('Error bookmarking offer:', e);
       }
+    } catch (e) {
+      console.error("BOOKMARK ERROR:", e.response?.data || e.message);
+      alert("Bookmark failed");
     }
   };
 
@@ -89,16 +83,16 @@ export default function OfferDetail() {
       try {
         await navigator.share(shareData);
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error('Error sharing:', err);
+        if (err.name !== "AbortError") {
+          console.error("Error sharing:", err);
         }
       }
     } else {
       try {
         await navigator.clipboard.writeText(shareUrl);
-        alert('Link copied to clipboard!');
+        alert("Link copied to clipboard!");
       } catch (err) {
-        console.error('Error copying to clipboard:', err);
+        console.error("Error copying to clipboard:", err);
       }
     }
   };
@@ -115,10 +109,14 @@ export default function OfferDetail() {
   }
 
   if (!offer) {
+  
     return (
       <div className="text-center py-12">
         <p className="text-gray-600 text-lg">Offer not found</p>
-        <Link to="/categories" className="text-blue-600 hover:underline mt-2 inline-block">
+        <Link
+          to="/categories"
+          className="text-blue-600 hover:underline mt-2 inline-block"
+        >
           Back to Categories
         </Link>
       </div>
@@ -126,17 +124,23 @@ export default function OfferDetail() {
   }
 
   const shop = offer.shop;
-  const hasMap = shop?.map_lat && shop?.map_lng;
-  const mapEmbedUrl = hasMap
-    ? `https://www.google.com/maps?q=${shop.map_lat},${shop.map_lng}&hl=en&z=15&output=embed`
-    : null;
+
+  const hasMap = offer?.googleMapUrl;
+
+const mapEmbedUrl = hasMap
+  ? `https://www.google.com/maps?q=${encodeURIComponent(offer.googleMapUrl)}&output=embed`
+  : null;
 
   return (
     <div className="space-y-6">
       <nav className="text-sm text-gray-600">
-        <Link to="/" className="hover:text-blue-600">Home</Link>
+        <Link to="/" className="hover:text-blue-600">
+          Home
+        </Link>
         <span className="mx-2">/</span>
-        <Link to="/categories" className="hover:text-blue-600">Categories</Link>
+        <Link to="/categories" className="hover:text-blue-600">
+          Categories
+        </Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900">{offer.title}</span>
       </nav>
@@ -144,9 +148,9 @@ export default function OfferDetail() {
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            {offer.image_url && (
+            {offer.imageUrl && (
               <img
-                src={offer.image_url}
+                src={offer.imageUrl}
                 alt={offer.title}
                 className="w-full h-96 object-cover"
               />
@@ -154,7 +158,9 @@ export default function OfferDetail() {
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">{offer.title}</h1>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {offer.title}
+                  </h1>
                   {offer.is_trending && (
                     <span className="inline-block mt-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold">
                       🔥 Trending
@@ -164,7 +170,7 @@ export default function OfferDetail() {
               </div>
 
               <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-line">
-                {offer.description || 'No description available.'}
+                {offer.description || "No description available."}
               </p>
 
               <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t">
@@ -172,21 +178,21 @@ export default function OfferDetail() {
                   onClick={handleLike}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     liked
-                      ? 'bg-red-100 text-red-700 border-2 border-red-300'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-300'
+                      ? "bg-red-100 text-red-700 border-2 border-red-300"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-300"
                   }`}
                 >
-                  {liked ? '❤️ Liked' : '🤍 Like'}
+                  {liked ? "❤️ Liked" : "🤍 Like"}
                 </button>
                 <button
                   onClick={handleBookmark}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     bookmarked
-                      ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-300'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-300'
+                      ? "bg-yellow-100 text-yellow-700 border-2 border-yellow-300"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-300"
                   }`}
                 >
-                  {bookmarked ? '🔖 Bookmarked' : '📑 Bookmark'}
+                  {bookmarked ? "🔖 Bookmarked" : "📑 Bookmark"}
                 </button>
                 <button
                   onClick={handleShare}
@@ -204,7 +210,7 @@ export default function OfferDetail() {
                 <h2 className="text-2xl font-bold mb-4">📍 Location</h2>
                 <div
                   className="rounded-lg overflow-hidden border-2 border-gray-200"
-                  style={{ height: '400px' }}
+                  style={{ height: "400px" }}
                 >
                   <iframe
                     width="100%"
@@ -218,7 +224,7 @@ export default function OfferDetail() {
                   />
                 </div>
                 <a
-                  href={`https://www.google.com/maps?q=${shop.map_lat},${shop.map_lng}`}
+                  href={offer.googleMapUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
@@ -256,13 +262,17 @@ export default function OfferDetail() {
                 )}
                 {shop.address && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-1">Address:</p>
+                    <p className="text-sm font-semibold text-gray-700 mb-1">
+                      Address:
+                    </p>
                     <p className="text-gray-600 text-sm">{shop.address}</p>
                   </div>
                 )}
                 {shop.phone && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-1">Phone:</p>
+                    <p className="text-sm font-semibold text-gray-700 mb-1">
+                      Phone:
+                    </p>
                     <a
                       href={`tel:${shop.phone}`}
                       className="text-blue-600 hover:text-blue-800 text-sm"
@@ -273,7 +283,9 @@ export default function OfferDetail() {
                 )}
                 {shop.area && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-1">Area:</p>
+                    <p className="text-sm font-semibold text-gray-700 mb-1">
+                      Area:
+                    </p>
                     <p className="text-gray-600 text-sm">
                       Pune: {shop.area?.name || shop.area}
                     </p>
@@ -290,10 +302,10 @@ export default function OfferDetail() {
                 <div>
                   <p className="font-semibold text-gray-700">Starts:</p>
                   <p className="text-gray-600">
-                    {new Date(offer.starts_at).toLocaleDateString('en-IN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
+                    {new Date(offer.starts_at).toLocaleDateString("en-IN", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
                     })}
                   </p>
                 </div>
@@ -302,10 +314,10 @@ export default function OfferDetail() {
                 <div>
                   <p className="font-semibold text-gray-700">Ends:</p>
                   <p className="text-gray-600">
-                    {new Date(offer.ends_at).toLocaleDateString('en-IN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
+                    {new Date(offer.ends_at).toLocaleDateString("en-IN", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
                     })}
                   </p>
                 </div>

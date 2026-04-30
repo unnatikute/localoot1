@@ -8,6 +8,7 @@ import Categories from "./pages/Categories.jsx";
 import Contact from "./pages/Contact.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
+import RegisterShop from "./pages/RegisterShop";
 
 import OfferDetail from "./pages/OfferDetail.jsx";
 import ShopDetail from "./pages/ShopDetail.jsx";
@@ -42,6 +43,14 @@ export default function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+    <Route
+     path="/register-shop" 
+     element={
+       <ProtectedRoute allowedRoles={["SHOPKEEPER"]}>
+     <RegisterShop />
+     </ProtectedRoute>
+     }
+     />
 
               {/* USER */}
               <Route

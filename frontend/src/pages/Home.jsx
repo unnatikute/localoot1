@@ -126,7 +126,16 @@ function LoggedInHome({ user }) {
       
         {/* Top Offers Slider */}
         <section>
-          <TopOffersSlider />
+        <TopOffersSlider
+  onLike={async (o) => {
+    try { await api.post(`/offers/${o.id}/like`); } catch {}
+    stats.addLikedOffer(o);
+  }}
+  onBookmark={async (o) => {
+    try { await api.post(`/offers/${o.id}/bookmark`); } catch {}
+    stats.addBookmarkedOffer(o);
+  }}
+/>
         </section>
 
         {/* Quick Filters */}
